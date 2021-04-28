@@ -11,7 +11,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin)
 set(CMAKE_EXPORT_COMPILE_COMMANDS)
 
 set(EXECUTABLE_NAME "SCZR_Snake")
-include_directories(${CMAKE_HOME_DIRECTORY}/include ${OpenCV_INCLUDE_DIRS} )
+include_directories(
+    ${OpenCV_INCLUDE_DIRS} 
+    ${CMAKE_HOME_DIRECTORY}/include/)
 add_executable(${EXECUTABLE_NAME} ${TARGET_SRC})
 
 target_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBS})
