@@ -9,17 +9,22 @@
 #include <opencv4/opencv2/highgui.hpp>
 #include <opencv4/opencv2/imgproc.hpp>
 
+struct Circle{
+    cv::Point2f centre;
+    float radius;
+};
+
 class ImageProcessing{
 public:
-
     void modify_color_search(cv::Mat frame);
     cv::Mat generate_mask(cv::Mat frame);
-    void find_marker(cv::Mat frame);
+    std::pair<cv::Point2f, float> find_marker(cv::Mat frame);
     void run();
 
 private:
-    int hueMin, saturationMin, valueMin;
-    int hueMax, saturationMax, valueMax;
+    cv::VideoCapture camera;
+    int hueMin = 70, saturationMin = 0, valueMin = 0;
+    int hueMax = 81, saturationMax = 255, valueMax = 255;
 };
 
 #endif //SCZR_SNAKE_IMAGEPROCESSING_HPP

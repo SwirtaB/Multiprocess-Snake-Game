@@ -3,7 +3,10 @@
 
 int main(){
     ImageProcessing processB = ImageProcessing();
-    processB.run();
+    while(true){
+        processB.run();
+        break;
+    }
 
     return 0;
 }
