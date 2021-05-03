@@ -2,12 +2,14 @@
 // Created by swirta on 27.04.2021.
 //
 
+#include "../include/Snake.hpp"
+
 #include "../include/ImageProcessing.hpp"
 #include <iostream>
 using namespace std;
 using namespace cv;
 
-void ImageProcessing::modify_color_search(Mat frame) {
+void ImageProcessing::modify_color_search() {
     namedWindow("Edit marker color");
     createTrackbar("Hue Min", "Edit marker color", &hueMin, 179);
     createTrackbar("Hue Max", "Edit marker color", &hueMax, 179);
@@ -17,7 +19,7 @@ void ImageProcessing::modify_color_search(Mat frame) {
     createTrackbar("Value Max", "Edit marker color", &valueMax, 255);
 
     while(true){
-        Mat rawFrame, frameHSV;
+        Mat frame, rawFrame, frameHSV;
         camera.read(rawFrame);
         flip(rawFrame, frame, 1);
         Scalar lowerLimit(hueMin, saturationMin, valueMin);
@@ -35,13 +37,7 @@ void ImageProcessing::modify_color_search(Mat frame) {
     }
 }
 
-Mat ImageProcessing::generate_mask(cv::Mat frame) {
-    Mat frameHSV;
-    cvtColor(frame, frameHSV, COLOR_BGR2HSV);
-    return frameHSV;
-}
-
-pair<Point2f, float> ImageProcessing::find_marker(cv::Mat frame) {
+pair<Point2f, float> ImageProcessing::find_marker(Mat &frame) {
     vector<vector<Point>> contours;
     Mat frameHSV, gameFrame;
     frame.copyTo(gameFrame);
@@ -64,18 +60,25 @@ pair<Point2f, float> ImageProcessing::find_marker(cv::Mat frame) {
         cerr << e.what() << endl;
     }
     if(!circles.empty()) {
-        sort(circles.begin(), circles.end(), [](const auto &x, const auto &y) { return y.second < x.second; });
-
-        circle(gameFrame, circles[0].first, circles[0].second, {255, 0, 0});
-        circle(gameFrame, circles[0].first, 1, {0, 0, 255});
+        //sort(circles.begin(), circles.end(), [](const auto &x, const auto &y) { return y.second < x.second; });
+//
+//        circle(gameFrame, circles[0].first, circles[0].second, {255, 0, 0});
+//        circle(gameFrame, circles[0].first, 1, {0, 0, 255});
+        auto marker = min_element(circles.begin(), circles.end(), [](const auto &x, const auto &y) {return y.second < x.second; });
+        return *marker;
     }
-    imshow("test", gameFrame);
+//    imshow("test", gameFrame);
     cerr << circles.size() << endl;
     return pair<Point2f, float>(Point2f(0.0, 0.0), 1.0);
 }
 
 void ImageProcessing::run() {
-    cv::Mat frame, rawFrame;
+    cv::Mat frame, rawFrame, gameFrame;
+
+    Snake snake;
+    for(int i = 1; i <= 10; ++i)
+        snake.grow(Point(1000 - 5*i, 100));
+
     camera.open(0);    //DEFAULT API INIT
 
     if(!camera.isOpened()){
@@ -90,12 +93,17 @@ void ImageProcessing::run() {
         }
         flip(rawFrame, frame, 1);
         //shows camera feed and waits with timeout
-        find_marker(frame);
-        //circle(frame, marker.centre, marker.radius, Scalar(0, 0, 255), 5);
-        //cv::imshow("Live", frame);
+        frame.copyTo(gameFrame);
+        pair<Point, float> marker = find_marker(frame);
+        snake.move(marker.first);
+        snake.draw(gameFrame);
+
+        circle(gameFrame, marker.first, marker.second, {255, 0, 0});
+        circle(gameFrame, marker.first, 1, {0, 0, 255});
+        cv::imshow("Live", gameFrame);
         int key = cv::waitKey(25);
         if(key == 109)
-            modify_color_search(frame);
+            modify_color_search();
         if(key == 27)
             break;
     }

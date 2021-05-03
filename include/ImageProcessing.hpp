@@ -9,16 +9,10 @@
 #include <opencv4/opencv2/highgui.hpp>
 #include <opencv4/opencv2/imgproc.hpp>
 
-struct Circle{
-    cv::Point2f centre;
-    float radius;
-};
-
 class ImageProcessing{
 public:
-    void modify_color_search(cv::Mat frame);
-    cv::Mat generate_mask(cv::Mat frame);
-    std::pair<cv::Point2f, float> find_marker(cv::Mat frame);
+    void modify_color_search();
+    std::pair<cv::Point2f, float> find_marker(cv::Mat &frame);
     void run();
 
 private:
