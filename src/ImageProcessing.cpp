@@ -39,8 +39,7 @@ void ImageProcessing::modify_color_search() {
 
 pair<Point2f, float> ImageProcessing::find_marker(Mat &frame) {
     vector<vector<Point>> contours;
-    Mat frameHSV, gameFrame;
-    frame.copyTo(gameFrame);
+    Mat frameHSV;
     medianBlur(frame, frame, 15);
     cvtColor(frame, frameHSV, COLOR_BGR2HSV);
     inRange(frameHSV, Scalar(hueMin, saturationMin, valueMin), Scalar(hueMax, saturationMax, valueMax), frame);
@@ -67,8 +66,6 @@ pair<Point2f, float> ImageProcessing::find_marker(Mat &frame) {
         auto marker = min_element(circles.begin(), circles.end(), [](const auto &x, const auto &y) {return y.second < x.second; });
         return *marker;
     }
-//    imshow("test", gameFrame);
-    cerr << circles.size() << endl;
     return pair<Point2f, float>(Point2f(0.0, 0.0), 1.0);
 }
 
@@ -92,16 +89,19 @@ void ImageProcessing::run() {
             return;
         }
         flip(rawFrame, frame, 1);
-        //shows camera feed and waits with timeout
         frame.copyTo(gameFrame);
         pair<Point, float> marker = find_marker(frame);
         snake.move(marker.first);
+        if(snake.check_snake())
+            cerr << "kolizja" << endl;
+
         snake.draw(gameFrame);
 
         circle(gameFrame, marker.first, marker.second, {255, 0, 0});
         circle(gameFrame, marker.first, 1, {0, 0, 255});
         cv::imshow("Live", gameFrame);
-        int key = cv::waitKey(25);
+
+        int key = cv::waitKey(1);
         if(key == 109)
             modify_color_search();
         if(key == 27)

@@ -68,7 +68,6 @@ bool Snake::eat_fruit(Point fruit) {
     int distance = a.x*b.y - b.x*a.y;
     return fruitRadius*fruitRadius * diffSquared > distance*distance;
 }
-Game::Game() : gameState(PREPARING), points(0), lives(0), sizeX(1280), sizeY(720) {}
 
 void Game::generate_fruit() {
     random_device randomDevice;
@@ -84,6 +83,11 @@ void Game::create_snake(Point head) {
         snake.grow(Point(head.x - 5*i, head.y));
 }
 
-void Game::eat_fruit() {
-    //if(głowa węża w owocu)
+void Game::draw(Mat &frame){
+    snake.draw(frame);
+    circle(frame, fruit, fruitRadius, Scalar(255, 0, 0), FILLED);
+
+    putText(frame, "LIVES: " + to_string(lives), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 2);
+    putText(frame, "SCORE: " + to_string(points), Point(sizeX - 50, sizeY - 50), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 2);
+
 }
