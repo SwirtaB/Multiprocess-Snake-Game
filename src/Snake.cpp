@@ -19,12 +19,12 @@ void Snake::move(Point point){
     snakeBody.pop_back();
 }
 Point Snake::get_point(int i) {
-    if(i >= 0 && i < snakeBody.size())
+    if(i > -1 && i < snakeBody.size())
         return snakeBody[i];
     else
         return Point(-1, -1);
 }
-void Snake::draw(cv::Mat &frame) {
+void Snake::draw(cv::Mat frame) {
     if (snakeBody.size() > 1)
         for (auto it = snakeBody.crbegin(); it != snakeBody.crend() - 1; ++it)
             cv::line(frame, *it, *(it + 1), {127, 8, 255}, 5);
@@ -57,16 +57,8 @@ bool Snake::check_snake() {
     return false;
 }
 bool Snake::eat_fruit(Point fruit) {
-    Point a = get_point(0), b = get_point(1);
-    a.x -= fruit.x;
-    a.y -= fruit.y;
-    b.x -= fruit.x;
-    b.y -= fruit.y;
-    int diffX = b.x - a.x;
-    int diffY = b.y - a.y;
-    int diffSquared = diffX^2 + diffY^2;
-    int distance = a.x*b.y - b.x*a.y;
-    return fruitRadius*fruitRadius * diffSquared > distance*distance;
+    Point a = get_point(0);
+    return std::pow(a.x - fruit.x, 2) + std::pow(a.y - fruit.y, 2) <= std::pow(fruitRadius, 2) && a.x > -1;
 }
 
 void Game::generate_fruit() {
@@ -83,11 +75,13 @@ void Game::create_snake(Point head) {
         snake.grow(Point(head.x - 5*i, head.y));
 }
 
-void Game::draw(Mat &frame){
+void Game::draw(Mat frame){
     snake.draw(frame);
-    circle(frame, fruit, fruitRadius, Scalar(255, 0, 0), FILLED);
+    circle(frame, fruit, fruitRadius, Scalar(0, 255, 0), FILLED);
 
     putText(frame, "LIVES: " + to_string(lives), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 2);
-    putText(frame, "SCORE: " + to_string(points), Point(sizeX - 50, sizeY - 50), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 2);
+    putText(frame, "SCORE: " + to_string(points), Point(sizeX - 200, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 2);
+}
 
+void Game::run(){
 }

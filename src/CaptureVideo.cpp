@@ -17,5 +17,5 @@ void Capture::run() {
         cerr << "Frame empty" << endl;
         return;
     }
-
+    //Dodanie do pamięci
 }

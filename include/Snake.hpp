@@ -10,7 +10,7 @@
 
 typedef std::pair<cv::Point2f, float> Circle;
 
-const int fruitRadius = 10;
+const int fruitRadius = 30;
 
 enum GAME_STATE{
     PREPARING,
@@ -25,7 +25,7 @@ public:
     void grow(cv::Point chunk);
     void move(cv::Point point);
     int length();
-    void draw(cv::Mat &frame);
+    void draw(cv::Mat frame);
     bool check_snake();
     bool eat_fruit(cv::Point fruit);
     cv::Point get_point(int i);
@@ -39,19 +39,22 @@ private:
 
 class Game{
 public:
-    void draw(cv::Mat &frame);
+    void draw(cv::Mat frame);
     void create_snake(cv::Point head);
     void generate_fruit();
     void run();
 
-    Game(int sizeX_, int sizeY_) : gameState(PREPARING), points(0), lives(3), sizeX(sizeX_), sizeY(sizeY_) {}
-private:
-    GAME_STATE gameState;
     int points, lives;
-    int sizeX, sizeY;
     cv::Point fruit;
     Snake snake;
 
+    Game(int sizeX_, int sizeY_) : gameState(PREPARING), points(0), lives(3), sizeX(sizeX_), sizeY(sizeY_) {}
+private:
+    GAME_STATE gameState;
+    int sizeX, sizeY;
+//    int points, lives;
+//    cv::Point fruit;
+//    Snake snake;
 };
 
 #endif //SCZR_SNAKE_SNAKE_HPP

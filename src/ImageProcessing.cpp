@@ -72,9 +72,13 @@ pair<Point2f, float> ImageProcessing::find_marker(Mat &frame) {
 void ImageProcessing::run() {
     cv::Mat frame, rawFrame, gameFrame;
 
-    Snake snake;
-    for(int i = 1; i <= 10; ++i)
-        snake.grow(Point(1000 - 5*i, 100));
+//    Snake snake;
+//    for(int i = 1; i <= 10; ++i)
+//        snake.grow(Point(1000 - 5*i, 100));
+
+    Game game(1920, 1080);
+    game.generate_fruit();
+    game.create_snake(Point(1920/2, 1080/2));
 
     camera.open(0);    //DEFAULT API INIT
 
@@ -91,12 +95,23 @@ void ImageProcessing::run() {
         flip(rawFrame, frame, 1);
         frame.copyTo(gameFrame);
         pair<Point, float> marker = find_marker(frame);
-        snake.move(marker.first);
-        if(snake.check_snake())
-            cerr << "kolizja" << endl;
 
-        snake.draw(gameFrame);
 
+//        snake.move(marker.first);
+//        if(snake.check_snake())
+//            cerr << "kolizja" << endl;
+//
+//        snake.draw(gameFrame);
+
+        game.snake.move(marker.first);
+        if(game.snake.check_snake())
+            game.lives--;
+
+        if(game.snake.eat_fruit(game.fruit)){
+            game.points++;
+            game.generate_fruit();
+        }
+        game.draw(gameFrame);
         circle(gameFrame, marker.first, marker.second, {255, 0, 0});
         circle(gameFrame, marker.first, 1, {0, 0, 255});
         cv::imshow("Live", gameFrame);
@@ -106,5 +121,7 @@ void ImageProcessing::run() {
             modify_color_search();
         if(key == 27)
             break;
+
+        //dodanie do pamięci (marker)
     }
 }
