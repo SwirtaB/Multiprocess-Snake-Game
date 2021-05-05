@@ -10,10 +10,11 @@
 #include <opencv4/opencv2/imgproc.hpp>
 
 class ImageProcessing{
+
 public:
     void modify_color_search();
     std::pair<cv::Point2f, float> find_marker(cv::Mat &frame);
-    void run();
+    void run(cv::Mat& received_frame);
 
 private:
     cv::VideoCapture camera;

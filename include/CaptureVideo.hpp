@@ -8,7 +8,8 @@
 
 class Capture{
 public:
-    void run();
+    cv::Mat capture();
+    void open();
 private:
     cv::VideoCapture camera;
     cv::Mat rawFrame;

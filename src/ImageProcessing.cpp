@@ -69,42 +69,34 @@ pair<Point2f, float> ImageProcessing::find_marker(Mat &frame) {
     return pair<Point2f, float>(Point2f(0.0, 0.0), 1.0);
 }
 
-void ImageProcessing::run() {
-    cv::Mat frame, rawFrame, gameFrame;
+void ImageProcessing::run(cv::Mat& received_frame) {
+    cv::Mat frame, gameFrame;
 
     Snake snake;
     for(int i = 1; i <= 10; ++i)
         snake.grow(Point(1000 - 5*i, 100));
 
-    camera.open(0);    //DEFAULT API INIT
-
-    if(!camera.isOpened()){
+     if(received_frame.empty()){
         return;
-    }
+     }
 
-    while(true){
-        //waits for a new farme from camera and store it into 'frame'
-        camera.read(rawFrame);
-        if(rawFrame.empty()){
-            return;
-        }
-        flip(rawFrame, frame, 1);
-        frame.copyTo(gameFrame);
-        pair<Point, float> marker = find_marker(frame);
-        snake.move(marker.first);
-        if(snake.check_snake())
-            cerr << "kolizja" << endl;
+     flip(received_frame, frame, 1);
+     frame.copyTo(gameFrame);
+     pair<Point, float> marker = find_marker(frame);
+     snake.move(marker.first);
+     if(snake.check_snake())
+         cerr << "kolizja" << endl;
 
-        snake.draw(gameFrame);
+     snake.draw(gameFrame);
 
-        circle(gameFrame, marker.first, marker.second, {255, 0, 0});
-        circle(gameFrame, marker.first, 1, {0, 0, 255});
-        cv::imshow("Live", gameFrame);
+     circle(gameFrame, marker.first, marker.second, {255, 0, 0});
+     circle(gameFrame, marker.first, 1, {0, 0, 255});
+     cv::imshow("Live", gameFrame);
+     int key = cv::waitKey(1);
+        //if(key == 109)
+          //  modify_color_search();
 
-        int key = cv::waitKey(1);
-        if(key == 109)
-            modify_color_search();
-        if(key == 27)
-            break;
-    }
+     if(key == 27)
+         return ;
+
 }
