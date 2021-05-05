@@ -7,6 +7,9 @@
 
 const unsigned int SHARED_MEMORY_BLOCK_SIZE = 2764800;
 
+const unsigned int FRAME_WIDTH = 1280;
+const unsigned int FRAME_HEIGHT = 720;
+
 const unsigned int SEMAPHORES_SYNC = 0;
 const unsigned int QUEUES_MEM_SYNC = 1;
 const unsigned int QUEUES_RAW_SYNC = 2;

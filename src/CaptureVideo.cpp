@@ -3,9 +3,8 @@
 //
 #include "../include/CaptureVideo.hpp"
 #include <opencv4/opencv2/imgcodecs.hpp>
-#include <opencv4/opencv2/highgui.hpp>
-#include <opencv4/opencv2/imgproc.hpp>
 #include <iostream>
+#include "constants.hpp"
 
 using namespace cv;
 using namespace std;
@@ -15,8 +14,8 @@ void Capture::open() {
     if (!camera.isOpened())
         throw std::runtime_error("ERROR: Unable to open camera");
 
-    camera.set(cv::CAP_PROP_FRAME_WIDTH,1280);
-    camera.set(cv::CAP_PROP_FRAME_HEIGHT,720);
+    camera.set(cv::CAP_PROP_FRAME_WIDTH,FRAME_WIDTH);
+    camera.set(cv::CAP_PROP_FRAME_HEIGHT,FRAME_HEIGHT);
 }
 
 cv::Mat Capture::capture() {

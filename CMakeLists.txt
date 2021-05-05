@@ -20,12 +20,18 @@ add_library(
         shared_memory_lib
         ./include/shared_memory.hpp
         ./src/shared_memory.cpp)
+add_library(
+        synchronizer_lib
+        ./include/synchronizer.hpp
+        ./src/synchronizer.cpp
+)
 
 add_executable(capture src/capture.cpp src/CaptureVideo.cpp)
 add_executable(process src/process.cpp src/ImageProcessing.cpp src/Snake.cpp)
 add_executable(start src/start.cpp)
 
 target_link_libraries(shared_memory_lib rt)
-target_link_libraries(process shared_memory_lib ${OpenCV_LIBS})
+target_link_libraries(synchronizer_lib shared_memory_lib)
+target_link_libraries(process shared_memory_lib synchronizer_lib ${OpenCV_LIBS})
 target_link_libraries(start shared_memory_lib rt)
-target_link_libraries(capture shared_memory_lib ${OpenCV_LIBS})
+target_link_libraries(capture shared_memory_lib synchronizer_lib ${OpenCV_LIBS})
