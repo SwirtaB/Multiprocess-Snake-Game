@@ -5,7 +5,7 @@
 #ifndef SCZR_SNAKE_CONSTANTS_HPP
 #define SCZR_SNAKE_CONSTANTS_HPP
 
-const unsigned int SHARED_MEMORY_BLOCK_SIZE = 2764800;
+const unsigned int SHARED_MEMORY_FRAME_BLOCK_SIZE = 2764800;
 
 const unsigned int FRAME_WIDTH = 1280;
 const unsigned int FRAME_HEIGHT = 720;

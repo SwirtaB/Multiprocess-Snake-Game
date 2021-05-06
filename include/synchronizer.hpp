@@ -7,49 +7,39 @@
 
 #include <vector>
 #include <semaphore.h>
-#include <constants.hpp>
 #include <iostream>
 #include <cstring>
 #include "shared_memory.hpp"
+#include "constants.hpp"
 
-class Synchronizer {
+class SharedMemorySemaphoresSynchronizer {
 
 private:
-    class SharedMemorySemaphoresSynchronizer {
 
-    private:
-        sem_t* sem_our;
-        sem_t* sem_opp;
+    using char_t = const char*;
 
-        char* filename;
-        void* block;
+    sem_t* sem_our;
+    sem_t* sem_opp;
 
-    public:
-        SharedMemorySemaphoresSynchronizer();
-        SharedMemorySemaphoresSynchronizer(unsigned int argc, char const* argv[]);
+    char* filename;
+    void* block;
 
-        void close_opened_resources();
-
-        void enter_critical_section();
-        void leave_critical_section();
-        void send_data(void* data, unsigned int size);
-        void receive_data(void* data, unsigned int size);
-    };
-
-    unsigned int mode;
-
-    SharedMemorySemaphoresSynchronizer sem_mem_sync;
-
-
+    void enter_critical_section();
+    void leave_critical_section();
 
 public:
-    explicit Synchronizer(unsigned int mode, unsigned int argc, char const* argv[]);
-    ~Synchronizer();
+    SharedMemorySemaphoresSynchronizer();
+    SharedMemorySemaphoresSynchronizer(char_t sem_our_n, char_t sem_opp_n, char_t block_n);
+    ~SharedMemorySemaphoresSynchronizer();
 
-    void free_resources();
+    void close_opened_resources();
+
     void send_data(void* data, unsigned int size);
     void receive_data(void* data, unsigned int size);
+
 };
+
+
 
 
 #endif //SCZR_SNAKE_SYNCHRONIZER_HPP

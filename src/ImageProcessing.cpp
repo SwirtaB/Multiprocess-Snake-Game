@@ -9,35 +9,60 @@
 using namespace std;
 using namespace cv;
 
-void ImageProcessing::modify_color_search() {
-    namedWindow("Edit marker color");
+
+
+void ImageProcessing::modify_color_search(cv::Mat& rec_frame) {
+
+    create_filtering_window();
+
+    Mat filtered_frame = perform_filtering(rec_frame);
+    show_filtering_window(filtered_frame);
+
+    int key = waitKey(1);
+
+    if(key == M_BUTTON || key == ESC_BUTTON) {
+        destroy_filtering_window();
+        set_status(key == ESC_BUTTON ? END_STATUS : DISPLAY_STATUS);
+    }
+}
+
+void ImageProcessing::create_filtering_window() {
+    namedWindow(window_name);
     createTrackbar("Hue Min", "Edit marker color", &hueMin, 179);
     createTrackbar("Hue Max", "Edit marker color", &hueMax, 179);
     createTrackbar("Saturation Min", "Edit marker color", &saturationMin, 255);
     createTrackbar("Saturation Max", "Edit marker color", &saturationMax, 255);
     createTrackbar("Value Min", "Edit marker color", &valueMin, 255);
     createTrackbar("Value Max", "Edit marker color", &valueMax, 255);
-
-    while(true){
-        Mat frame, rawFrame, frameHSV;
-        camera.read(rawFrame);
-        flip(rawFrame, frame, 1);
-        Scalar lowerLimit(hueMin, saturationMin, valueMin);
-        Scalar upperLimit(hueMax, saturationMax, valueMax);
-        cvtColor(frame, frameHSV, COLOR_BGR2HSV);
-        Mat mask;
-
-        inRange(frameHSV, lowerLimit, upperLimit, mask);
-
-        imshow("Edit marker color", mask);
-        if(waitKey(1) == 109){
-            destroyWindow("Edit marker color");
-            break;
-        }
-    }
 }
 
-pair<Point2f, float> ImageProcessing::find_marker(Mat &frame) {
+void ImageProcessing::destroy_filtering_window() {
+    destroyWindow(window_name);
+}
+
+void ImageProcessing::set_status(unsigned int new_status) {
+    status = new_status;
+}
+
+void ImageProcessing::show_filtering_window(cv::Mat& frame) {
+    cv::imshow(window_name, frame);
+}
+
+cv::Mat ImageProcessing::perform_filtering(cv::Mat &rec_frame) const {
+
+    Mat frame, frameHSV, mask;
+    flip(rec_frame, frame, 1);
+
+    Scalar lowerLimit(hueMin, saturationMin, valueMin);
+    Scalar upperLimit(hueMax, saturationMax, valueMax);
+
+    cvtColor(frame, frame, COLOR_BGR2HSV);
+    inRange(frame, lowerLimit, upperLimit, frame);
+
+    return frame;
+}
+
+pair<Point2f, float> ImageProcessing::find_marker(Mat &frame) const {
     vector<vector<Point>> contours;
     Mat frameHSV;
     medianBlur(frame, frame, 15);
@@ -69,34 +94,47 @@ pair<Point2f, float> ImageProcessing::find_marker(Mat &frame) {
     return pair<Point2f, float>(Point2f(0.0, 0.0), 1.0);
 }
 
-void ImageProcessing::run(cv::Mat& received_frame) {
-    cv::Mat frame, gameFrame;
+bool ImageProcessing::end() const {
+    return status == END_STATUS;
+}
 
-    Snake snake;
-    for(int i = 1; i <= 10; ++i)
-        snake.grow(Point(1000 - 5*i, 100));
+std::pair<bool, cv::Mat> ImageProcessing::run(cv::Mat& rec_frame) {
 
-     if(received_frame.empty()){
-        return;
-     }
+    if (status == ADJUST_STATUS)
+        modify_color_search(rec_frame);
+    else if (status == DISPLAY_STATUS) {
 
-     flip(received_frame, frame, 1);
-     frame.copyTo(gameFrame);
-     pair<Point, float> marker = find_marker(frame);
-     snake.move(marker.first);
-     if(snake.check_snake())
-         cerr << "kolizja" << endl;
 
-     snake.draw(gameFrame);
+        cv::Mat frame, gameFrame;
 
-     circle(gameFrame, marker.first, marker.second, {255, 0, 0});
-     circle(gameFrame, marker.first, 1, {0, 0, 255});
-     cv::imshow("Live", gameFrame);
-     int key = cv::waitKey(1);
-        //if(key == 109)
-          //  modify_color_search();
+        Snake snake;
+        for (int i = 1; i <= 10; ++i)
+            snake.grow(Point(1000 - 5 * i, 100));
 
-     if(key == 27)
-         return ;
+        if (rec_frame.empty()) {
+            return std::make_pair(false, rec_frame);
+        }
 
+        flip(rec_frame, frame, 1);
+        frame.copyTo(gameFrame);
+        pair<Point, float> marker = find_marker(frame);
+        snake.move(marker.first);
+        if (snake.check_snake())
+            cerr << "kolizja" << endl;
+
+        snake.draw(gameFrame);
+
+        circle(gameFrame, marker.first, marker.second, {255, 0, 0});
+        circle(gameFrame, marker.first, 1, {0, 0, 255});
+
+        cv::imshow("Image Processing", gameFrame);
+        int key = cv::waitKey(1);
+
+        if (key == ESC_BUTTON || key == M_BUTTON)
+            set_status(key == ESC_BUTTON ? END_STATUS : ADJUST_STATUS);
+
+        return std::make_pair(status == DISPLAY_STATUS, gameFrame);
+    }
+
+    return std::make_pair(false, rec_frame);
 }

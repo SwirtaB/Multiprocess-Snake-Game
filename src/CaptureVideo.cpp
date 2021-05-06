@@ -11,8 +11,9 @@ using namespace std;
 
 void Capture::open() {
     camera.open(0);
+
     if (!camera.isOpened())
-        throw std::runtime_error("ERROR: Unable to open camera");
+        throw std::runtime_error("ERROR: Unable to open camera.");
 
     camera.set(cv::CAP_PROP_FRAME_WIDTH,FRAME_WIDTH);
     camera.set(cv::CAP_PROP_FRAME_HEIGHT,FRAME_HEIGHT);
@@ -22,7 +23,7 @@ cv::Mat Capture::capture() {
 
     camera.read(rawFrame);
     if(rawFrame.empty())
-        throw std::runtime_error("ERROR: Read frame is empty");
+        throw std::runtime_error("ERROR: Read frame is empty.");
 
     return rawFrame;
 }
