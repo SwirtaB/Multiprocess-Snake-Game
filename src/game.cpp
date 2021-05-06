@@ -24,7 +24,7 @@ namespace {
 
             while (true) {
                 cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
-                synchronizer.receive_data(frame.data, SHARED_MEMORY_FRAME_BLOCK_SIZE);
+                synchronizer.receive_data(frame.data, FRAME_SIZE);
                 cv::imshow("Game received", frame);
                 cv::waitKey(1);
             }
@@ -37,6 +37,34 @@ namespace {
 
     }
 
+    void sync_with_queues_and_mem(int argc, const char* argv[]) {
+
+        if (argc != 5) {
+            std::cerr << "CRITICAL ERROR: Game process wrong number of queues and memory synchronization" << std::endl;
+            exit(-1);
+        }
+
+        try {
+
+            QueueSharedMemorySynchronizer synchronizer(argv[2], argv[3], argv[4]);
+
+            while (true) {
+
+                cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
+
+                synchronizer.receive_data(frame.data, FRAME_SIZE);
+                cv::imshow("Game received", frame);
+                cv::waitKey(1);
+            }
+
+
+        } catch (std::runtime_error& e) {
+            std::cerr << "Game process: " << e.what() << std::endl;
+            exit(-1);
+        }
+
+
+    }
 
 
 }
@@ -52,10 +80,12 @@ int main(int argc, const char** argv) {
         return -1;
     }
 
-    unsigned int sync_mode = std::atoi(argv[0]);
+    unsigned int sync_mode = std::atoi(argv[1]);
 
     if (sync_mode == SEMAPHORES_SYNC)
         sync_with_semaphores(argc, argv);
+    else if (sync_mode == QUEUES_MEM_SYNC)
+        sync_with_queues_and_mem(argc, argv);
 
 
     return 0;

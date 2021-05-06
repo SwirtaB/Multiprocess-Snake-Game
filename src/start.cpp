@@ -2,38 +2,24 @@
 #include <vector>
 #include <unistd.h>
 #include <semaphore.h>
+#include <mqueue.h>
 #include <fcntl.h>
 #include <wait.h>
 
 #include "shared_memory.hpp"
 #include "constants.hpp"
 
-/** Semaphores synchronization constants */
-char* SEM_SYNC = (char*) "0";
-
-char* PROCESS = (char*) "process";
-char* CAPTURE = (char*) "capture";
-char* GAME = (char*) "game";
-
-char* CAPTURE_PROCESS_SEM = (char*) "/capture_process_sem";
-char* PROCESS_CAPTURE_SEM = (char*) "/process_capture_sem";
-
-char* PROCESS_GAME_SEM = (char*) "/process_game_sem";
-char* GAME_PROCESS_SEM = (char*) "/game_process_sem";
-
-char* CAPTURE_PROCESS_BLOCK = (char*) "/capture_process_shm";
-char* PROCESS_GAME_BLOCK = (char*) "/process_game_shm";
-
-
-
 
 namespace {
 
     void end_processes(std::vector<pid_t>& children) {
         for (auto& pid : children)
-            if (kill(pid, 0) == 0)
+            if (kill(pid, 0) == 0) {
                 if (kill(pid, SIGINT) != 0)
                     std::cerr << "WARNING: Unable to kill process with pid: " << pid << std::endl;
+            } else {
+                std::cout << "Process with pid: " << pid << " died" << std::endl;
+            }
     }
 
     void create_blocks(std::vector<std::pair<char*, unsigned int>>& blocks_with_sizes) {
@@ -81,8 +67,8 @@ namespace {
     void start_processes_using_semaphores() {
 
         std::vector<std::pair<char*, unsigned int>> block_with_sizes =
-                std::vector<std::pair<char*, unsigned int>>({{CAPTURE_PROCESS_BLOCK, SHARED_MEMORY_FRAME_BLOCK_SIZE},
-                                                             {PROCESS_GAME_BLOCK, SHARED_MEMORY_FRAME_BLOCK_SIZE}});
+                std::vector<std::pair<char*, unsigned int>>({{CAPTURE_PROCESS_BLOCK, FRAME_SIZE},
+                                                             {PROCESS_GAME_BLOCK,    FRAME_SIZE}});
 
         std::vector<std::pair<char*, unsigned int>> semaphores_with_values =
                 std::vector<std::pair<char*, unsigned int>> ({{CAPTURE_PROCESS_SEM, 0},
@@ -128,6 +114,108 @@ namespace {
         destroy_blocks(block_with_sizes);
     }
 
+    void create_queues(std::vector<char*>& queues, unsigned int mess_size) {
+
+        mq_attr attr {};
+        attr.mq_flags = 0;
+        attr.mq_maxmsg = 1;
+        attr.mq_msgsize = mess_size;
+        attr.mq_curmsgs = 0;
+
+        for (auto& q : queues) {
+            mqd_t queue = mq_open(q, O_RDWR | O_CREAT, 0777, &attr);
+            if (queue == -1)
+                throw std::runtime_error("Unable to create message queue.");
+        }
+    }
+
+    void destroy_queues(std::vector<char*>& queues) {
+        for (auto& q : queues)
+            mq_unlink(q);
+    }
+
+
+    void start_processes_using_queues() {
+
+        std::vector<char* > queues = std::vector<char*> ({CAPTURE_PROCESS_QUEUE, PROCESS_GAME_QUEUE});
+
+        try {
+            create_queues(queues, FRAME_SIZE);
+        } catch (std::runtime_error& e) {
+            std::cerr << e.what() << std::endl;
+            destroy_queues(queues);
+            exit(-1);
+        }
+
+        char* capture_param[] = {CAPTURE, QUEUE_SYNC, CAPTURE_PROCESS_QUEUE, nullptr};
+        char* process_param[] = {PROCESS, QUEUE_SYNC, CAPTURE_PROCESS_QUEUE, nullptr};
+
+        std::vector<pid_t> children;
+
+        try {
+
+            children.emplace_back(start_process(capture_param));
+            children.emplace_back(start_process(process_param));
+
+        } catch (std::runtime_error& e) {
+            std::cerr << e.what() << std::endl;
+            end_processes(children);
+            destroy_queues(queues);
+            exit(-1);
+        }
+
+        wait(nullptr);
+
+        end_processes(children);
+        destroy_queues(queues);
+    }
+
+    void start_process_using_mem_and_queues() {
+
+        std::vector<std::pair<char*, unsigned int>> block_with_sizes =
+                std::vector<std::pair<char*, unsigned int>>({{CAPTURE_PROCESS_BLOCK, FRAME_SIZE},
+                                                             {PROCESS_GAME_BLOCK,    FRAME_SIZE}});
+        std::vector<char* > queues = std::vector<char*> ({CAPTURE_SEND_QUEUE, CAPTURE_RECV_QUEUE,
+                                                          PROCESS_RECV_QUEUE, PROCESS_SEND_QUEUE});
+
+        try {
+            create_queues(queues, MESS_SIZE);
+            create_blocks(block_with_sizes);
+        } catch (std::runtime_error& e) {
+            std::cerr << e.what() << std::endl;
+            destroy_queues(queues);
+            destroy_blocks(block_with_sizes);
+            exit(-1);
+        }
+
+        char* capture_param[] = {CAPTURE, QUEUE_MEM_SYNC, CAPTURE_SEND_QUEUE, CAPTURE_RECV_QUEUE, CAPTURE_PROCESS_BLOCK, nullptr};
+        char* process_param[] = {PROCESS, QUEUE_MEM_SYNC, CAPTURE_SEND_QUEUE, CAPTURE_RECV_QUEUE, CAPTURE_PROCESS_BLOCK,
+                                 PROCESS_SEND_QUEUE, PROCESS_RECV_QUEUE, PROCESS_GAME_BLOCK, nullptr};
+        char* game_param[] = {GAME, QUEUE_MEM_SYNC, PROCESS_SEND_QUEUE, PROCESS_RECV_QUEUE, PROCESS_GAME_BLOCK, nullptr};
+
+        std::vector<pid_t> children;
+
+        try {
+
+            children.emplace_back(start_process(capture_param));
+            children.emplace_back(start_process(process_param));
+            children.emplace_back(start_process(game_param));
+
+        } catch (std::runtime_error& e) {
+            std::cerr << e.what() << std::endl;
+            end_processes(children);
+            destroy_queues(queues);
+            destroy_blocks(block_with_sizes);
+            exit(-1);
+        }
+
+        wait(nullptr);
+
+        end_processes(children);
+        destroy_queues(queues);
+        destroy_blocks(block_with_sizes);
+    }
+
 
 
 
@@ -155,10 +243,12 @@ int main(int argc, char const* argv[]){
 
     if (sync_mode == SEMAPHORES_SYNC)
         start_processes_using_semaphores();
-    else {
-        std::cerr << "Deprecated synchronization mode" << std::endl;
-        return -1;
-    }
+    else if (sync_mode == QUEUES_MEM_SYNC)
+        start_process_using_mem_and_queues();
+    else if (sync_mode == QUEUES_RAW_SYNC)
+        start_processes_using_queues();
+    else
+        std::cerr << "Wrong synchronization mode." << std::endl;
 
 
     return 0;

@@ -127,7 +127,8 @@ std::pair<bool, cv::Mat> ImageProcessing::run(cv::Mat& rec_frame) {
         circle(gameFrame, marker.first, marker.second, {255, 0, 0});
         circle(gameFrame, marker.first, 1, {0, 0, 255});
 
-        cv::imshow("Image Processing", gameFrame);
+        // Uncomment in order to see frame in image processing.
+        // cv::imshow("Image Processing", gameFrame);
         int key = cv::waitKey(1);
 
         if (key == ESC_BUTTON || key == M_BUTTON)

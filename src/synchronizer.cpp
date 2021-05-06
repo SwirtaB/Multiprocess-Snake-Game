@@ -2,13 +2,12 @@
 // Created by radoslaw on 05.05.2021.
 //
 #include "synchronizer.hpp"
+#include <unistd.h>
 
 SharedMemorySemaphoresSynchronizer::SharedMemorySemaphoresSynchronizer() : sem_our(nullptr), sem_opp(nullptr),
 filename(nullptr), block(nullptr) {}
 
-SharedMemorySemaphoresSynchronizer::SharedMemorySemaphoresSynchronizer(
-        SharedMemorySemaphoresSynchronizer::char_t sem_our_n, SharedMemorySemaphoresSynchronizer::char_t sem_opp_n,
-        SharedMemorySemaphoresSynchronizer::char_t block_n) {
+SharedMemorySemaphoresSynchronizer::SharedMemorySemaphoresSynchronizer(char_t sem_our_n, char_t sem_opp_n, char_t block_n) {
 
     filename = (char*) block_n;
     sem_our = nullptr;
@@ -25,7 +24,7 @@ SharedMemorySemaphoresSynchronizer::SharedMemorySemaphoresSynchronizer(
         throw std::runtime_error("CRITICAL ERROR: Unable to open second semaphore.");
     }
 
-    block = attach_shared_memory_block(filename, SHARED_MEMORY_FRAME_BLOCK_SIZE);
+    block = attach_shared_memory_block(filename, FRAME_SIZE);
     if (block == (char* ) nullptr) {
         sem_close(sem_our);
         sem_close(sem_opp);
@@ -42,12 +41,9 @@ void SharedMemorySemaphoresSynchronizer::close_opened_resources() {
         if (sem_close(sem_opp) != 0)
             std::cerr << "WARNING: Unable to close first semaphore." << std::endl;
 
-    if (block != nullptr) {
-        if (!detach_shared_memory_block(block, SHARED_MEMORY_FRAME_BLOCK_SIZE))
+    if (block != nullptr)
+        if (!detach_shared_memory_block(block, FRAME_SIZE))
             std::cerr << "WARNING: Unable to detach shared memory block," << std::endl;
-        if (!destroy_shared_memory_block(filename))
-            std::cerr << "WARNING: Unable to unlink memory block." << std::endl;
-    }
 
     sem_our = nullptr;
     sem_opp = nullptr;
@@ -78,3 +74,87 @@ SharedMemorySemaphoresSynchronizer::~SharedMemorySemaphoresSynchronizer() {
     close_opened_resources();
 }
 
+RawQueuesSynchronizer::RawQueuesSynchronizer(): queue_desc(-1) {}
+
+RawQueuesSynchronizer::RawQueuesSynchronizer(char_t queue_name) {
+
+    queue_desc = mq_open(queue_name, O_RDWR);
+
+    if (queue_desc == -1)
+        throw std::runtime_error("ERROR: Unable to open queue.");
+}
+
+void RawQueuesSynchronizer::read_data(void *data, unsigned int size) const {
+    if (mq_receive(queue_desc, (char*) data, size, NULL) == -1)
+        std::cerr << "Warning: Unable to receive message with errno " << errno << std::endl;
+}
+
+void RawQueuesSynchronizer::close_opened_resources() const {
+    mq_close(queue_desc);
+}
+
+void RawQueuesSynchronizer::send_data(void *data, unsigned int size) const {
+
+    if (mq_send(queue_desc, (char*) data, size, 1) == -1)
+        std::cerr << "Warning: Unable to send message" << std::endl;
+}
+
+QueueSharedMemorySynchronizer::QueueSharedMemorySynchronizer(): queue_sent(-1), block(nullptr), filename(nullptr) {}
+
+QueueSharedMemorySynchronizer::QueueSharedMemorySynchronizer(char_t queue_sent_name, char_t queue_done_name, char_t block_name) {
+
+    filename = (char*) block_name;
+    queue_sent = mq_open(queue_sent_name, O_RDWR);
+    queue_done = mq_open(queue_done_name, O_RDWR);
+
+    if (queue_sent == -1 || queue_done == -1)
+        throw std::runtime_error("ERROR: Unable to open queue.");
+
+    block = attach_shared_memory_block(filename, FRAME_SIZE);
+    if (block == (char* ) nullptr) {
+        mq_close(queue_sent);
+        throw std::runtime_error("CRITICAL ERROR: Unable to link shared memory block.");
+    }
+
+}
+
+void QueueSharedMemorySynchronizer::receive_data(void *data, unsigned int size) {
+
+    char buffer[MESS_SIZE];
+    if (mq_receive(queue_sent, buffer, MESS_SIZE, nullptr) == -1)
+        std::cerr << "WARNING: Unable to receive message." << std::endl;
+
+   if (strcmp(buffer, SENT_MESS) == 0) {
+
+        memcpy(data, block, size);
+
+        if (mq_send(queue_done, DONE_MESS, MESS_SIZE, 1) == -1)
+            std::cerr << "WARNING: Unable to send done message.";
+
+    } else
+        std::cerr << "WARNING: Received unexpected message" << std::endl;
+
+}
+
+void QueueSharedMemorySynchronizer::send_data(void *data, unsigned int size) {
+
+    memcpy(block, data, size);
+
+    if (mq_send(queue_sent, SENT_MESS, MESS_SIZE, 1) == -1)
+        std::cerr << "WARNING: Unable to send sent message." << std::endl;
+
+    char buffer[MESS_SIZE];
+
+    if (mq_receive(queue_done, buffer, MESS_SIZE, nullptr) == -1)
+        std::cerr << "WARNING: Unable to receive done message" << std::endl;
+
+    if (strcmp(buffer, DONE_MESS) != 0)
+        std::cerr << "WARNING: Received unexpected message; expecting done." << std::endl;
+
+}
+
+void QueueSharedMemorySynchronizer::close_opened_resources() {
+    mq_close(queue_sent);
+    mq_close(queue_done);
+    detach_shared_memory_block(block, FRAME_SIZE);
+}

@@ -7,16 +7,17 @@
 
 #include <vector>
 #include <semaphore.h>
+#include <mqueue.h>
 #include <iostream>
 #include <cstring>
 #include "shared_memory.hpp"
 #include "constants.hpp"
 
+using char_t = const char*;
+
 class SharedMemorySemaphoresSynchronizer {
 
 private:
-
-    using char_t = const char*;
 
     sem_t* sem_our;
     sem_t* sem_opp;
@@ -37,6 +38,44 @@ public:
     void send_data(void* data, unsigned int size);
     void receive_data(void* data, unsigned int size);
 
+};
+
+
+class RawQueuesSynchronizer {
+
+private:
+
+    mqd_t queue_desc;
+
+public:
+    RawQueuesSynchronizer();
+    explicit RawQueuesSynchronizer(char_t queue_name);
+
+    void read_data(void* data, unsigned int size) const;
+    void send_data(void* data, unsigned int size) const;
+
+    void close_opened_resources() const;
+};
+
+class QueueSharedMemorySynchronizer {
+
+private:
+
+    mqd_t queue_sent;
+    mqd_t queue_done;
+
+    void* block;
+    char* filename;
+
+
+public:
+    QueueSharedMemorySynchronizer();
+    QueueSharedMemorySynchronizer(char_t queue_sent_name, char_t queue_done_name, char_t block_name);
+
+    void receive_data(void* data, unsigned int size);
+    void send_data(void* data, unsigned int size);
+
+    void close_opened_resources();
 };
 
 
