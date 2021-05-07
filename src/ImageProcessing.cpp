@@ -104,8 +104,13 @@ void ImageProcessing::run() {
 //        snake.draw(gameFrame);
 
         game.snake.move(marker.first);
-        if(game.snake.check_snake())
+        if(game.snake.check_snake()){
             game.lives--;
+            for(int i = 0; i < game.snake.length(); ++i)
+                std::cerr << game.snake.get_point(i) << ", ";
+
+            std::cerr << std::endl;
+        }
 
         if(game.snake.eat_fruit(game.fruit)){
             game.points++;

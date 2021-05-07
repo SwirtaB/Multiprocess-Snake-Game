@@ -39,7 +39,10 @@ bool Snake::is_intersected(const cv::Point &a, const cv::Point &b, const cv::Poi
     orientationArray[1] = orientation(a, b, d);
     orientationArray[2] = orientation(c, d, a);
     orientationArray[3] = orientation(c, d, b);
-    return (orientationArray[0] != orientationArray[1]) && (orientationArray[2] != orientationArray[3]);
+    if((orientationArray[0] != orientationArray[1]) && (orientationArray[2] != orientationArray[3]))
+        return true;
+    else
+        return false;
 }
 bool Snake::check_snake() {
     if(snakeBody.size() > 3){
@@ -47,7 +50,7 @@ bool Snake::check_snake() {
         a = get_point(0);
         b = get_point(1);
         int snakeSize = snakeBody.size();
-        for(int i = 2; i < snakeSize; ++i){
+        for(int i = 2; i < snakeSize - 1; ++i){
             c = get_point(i);
             d = get_point(i + 1);
             if(is_intersected(a, b, c, d))

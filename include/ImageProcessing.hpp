@@ -17,8 +17,8 @@ public:
 
 private:
     cv::VideoCapture camera;
-    int hueMin = 70, saturationMin = 0, valueMin = 0;
-    int hueMax = 81, saturationMax = 255, valueMax = 255;
+    int hueMin = 90, saturationMin = 100, valueMin = 0;
+    int hueMax = 120, saturationMax = 255, valueMax = 255;
 };
 
 #endif //SCZR_SNAKE_IMAGEPROCESSING_HPP
