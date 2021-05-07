@@ -84,10 +84,6 @@ pair<Point2f, float> ImageProcessing::find_marker(Mat &frame) const {
         cerr << e.what() << endl;
     }
     if(!circles.empty()) {
-        //sort(circles.begin(), circles.end(), [](const auto &x, const auto &y) { return y.second < x.second; });
-//
-//        circle(gameFrame, circles[0].first, circles[0].second, {255, 0, 0});
-//        circle(gameFrame, circles[0].first, 1, {0, 0, 255});
         auto marker = min_element(circles.begin(), circles.end(), [](const auto &x, const auto &y) {return y.second < x.second; });
         return *marker;
     }
@@ -98,18 +94,11 @@ bool ImageProcessing::end() const {
     return status == END_STATUS;
 }
 
-std::pair<bool, cv::Mat> ImageProcessing::run(cv::Mat& rec_frame) {
-
+std::pair<bool, cv::Mat> ImageProcessing::run(cv::Mat& rec_frame, Game &game) {
     if (status == ADJUST_STATUS)
         modify_color_search(rec_frame);
     else if (status == DISPLAY_STATUS) {
-
-
         cv::Mat frame, gameFrame;
-
-        Snake snake;
-        for (int i = 1; i <= 10; ++i)
-            snake.grow(Point(1000 - 5 * i, 100));
 
         if (rec_frame.empty()) {
             return std::make_pair(false, rec_frame);
@@ -118,22 +107,15 @@ std::pair<bool, cv::Mat> ImageProcessing::run(cv::Mat& rec_frame) {
         flip(rec_frame, frame, 1);
         frame.copyTo(gameFrame);
         pair<Point, float> marker = find_marker(frame);
-        snake.move(marker.first);
-        if (snake.check_snake())
-            cerr << "kolizja" << endl;
+        bool close = false;
+        game.run(marker.first, gameFrame, &close);
+        cv::imshow("Image Processing", gameFrame);
 
-        snake.draw(gameFrame);
-
-        circle(gameFrame, marker.first, marker.second, {255, 0, 0});
-        circle(gameFrame, marker.first, 1, {0, 0, 255});
-
-        // Uncomment in order to see frame in image processing.
-        // cv::imshow("Image Processing", gameFrame);
         int key = cv::waitKey(1);
-
         if (key == ESC_BUTTON || key == M_BUTTON)
             set_status(key == ESC_BUTTON ? END_STATUS : ADJUST_STATUS);
-
+        if(close)
+            set_status(END_STATUS);
         return std::make_pair(status == DISPLAY_STATUS, gameFrame);
     }
 

@@ -21,7 +21,7 @@ namespace {
             Capture capture;
             capture.open();
 
-            for (int i = 0; i < 100; i++) {
+            while(true) {
                 cv::Mat frame = capture.capture();
                 synchronizer.send_data(frame.data, FRAME_SIZE);
             }

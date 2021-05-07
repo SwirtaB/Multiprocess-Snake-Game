@@ -5,6 +5,7 @@
 #include "constants.hpp"
 #include "synchronizer.hpp"
 #include "ImageProcessing.hpp"
+#include "Snake.hpp"
 
 
 namespace {
@@ -22,11 +23,15 @@ namespace {
             SharedMemorySemaphoresSynchronizer synchronizer_game(argv[5], argv[6], argv[7]);
             ImageProcessing processor;
 
+            //Test only
+            Game game(cv::Point(FRAME_WIDTH, FRAME_HEIGHT));
+            //Test only
+
             while (!processor.end()) {
 
                 cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
                 synchronizer_capture.receive_data(frame.data, FRAME_SIZE);
-                auto result = processor.run(frame);
+                auto result = processor.run(frame, game);
 
                 if (result.first)
                     synchronizer_game.send_data(result.second.data, FRAME_SIZE);
@@ -79,15 +84,15 @@ namespace {
             QueueSharedMemorySynchronizer synchronizer_game(argv[5], argv[6], argv[7]);
             ImageProcessing processor;
 
-            while(!processor.end()) {
-                cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
-                synchronizer_capture.receive_data(frame.data, FRAME_SIZE);
-                auto result = processor.run(frame);
-
-                if (result.first)
-                    synchronizer_game.send_data(result.second.data, FRAME_SIZE);
-
-            }
+//            while(!processor.end()) {
+//                cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
+//                synchronizer_capture.receive_data(frame.data, FRAME_SIZE);
+//                auto result = processor.run(frame);
+//
+//                if (result.first)
+//                    synchronizer_game.send_data(result.second.data, FRAME_SIZE);
+//
+//            }
 
             synchronizer_capture.close_opened_resources();
 
