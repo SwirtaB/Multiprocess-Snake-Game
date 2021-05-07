@@ -9,8 +9,6 @@
 #include <opencv4/opencv2/highgui.hpp>
 #include <deque>
 
-typedef std::pair<cv::Point2f, float> Circle;
-
 const int fruitRadius = 20;
 
 enum GAME_STATE{
@@ -41,6 +39,8 @@ private:
 class Game{
 public:
     void draw(cv::Mat &frame);
+    void draw_lost_message(cv::Mat &frame);
+    void draw_info_message(cv::Mat &frame);
     void create_snake(cv::Point &head);
     void generate_fruit();
     void run(cv::Point &marker, cv::Mat &frame, bool *close);
