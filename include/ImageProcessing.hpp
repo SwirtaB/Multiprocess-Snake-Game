@@ -9,17 +9,38 @@
 #include <opencv4/opencv2/highgui.hpp>
 #include <opencv4/opencv2/imgproc.hpp>
 
-class ImageProcessing{
-public:
+const unsigned int M_BUTTON = 109;
+const unsigned int ESC_BUTTON = 27;
 
-    void modify_color_search(cv::Mat frame);
-    cv::Mat generate_mask(cv::Mat frame);
-    void find_marker(cv::Mat frame);
-    void run();
+const unsigned int DISPLAY_STATUS = 0;
+const unsigned int ADJUST_STATUS = 1;
+const unsigned int END_STATUS = 2;
+
+class ImageProcessing{
+
+public:
+    void modify_color_search(cv::Mat& rec_frame);
+    std::pair<cv::Point2f, float> find_marker(cv::Mat &frame) const;
+    std::pair<bool, cv::Mat> run(cv::Mat& rec_frame);
+
+    bool end() const;
 
 private:
-    int hueMin, saturationMin, valueMin;
-    int hueMax, saturationMax, valueMax;
+
+    const std::string window_name = "Edit marker color";
+
+    int hueMin = 70, saturationMin = 0, valueMin = 0;
+    int hueMax = 81, saturationMax = 255, valueMax = 255;
+
+    unsigned int status = ADJUST_STATUS;
+
+    void create_filtering_window();
+    void show_filtering_window(cv::Mat& frame);
+    void destroy_filtering_window();
+
+    void set_status(unsigned int new_status);
+
+    cv::Mat perform_filtering(cv::Mat& rec_frame) const;
 };
 
 #endif //SCZR_SNAKE_IMAGEPROCESSING_HPP
