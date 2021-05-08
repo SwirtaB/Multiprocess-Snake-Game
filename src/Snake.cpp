@@ -68,8 +68,8 @@ bool Snake::eat_fruit(Point &fruit) {
 void Game::generate_fruit() {
     random_device randomDevice;
     mt19937 randomEngine(randomDevice());
-    uniform_int_distribution<> posXGen(100, windowSize.x);
-    uniform_int_distribution<> posYGen(100, windowSize.y);
+    uniform_int_distribution<> posXGen(100, windowSize.x - 100);
+    uniform_int_distribution<> posYGen(100, windowSize.y - 100);
     fruit.x = posXGen(randomEngine);
     fruit.y = posYGen(randomEngine);
 }
@@ -111,6 +111,8 @@ void Game::run(Point &marker, Mat &frame, bool *close) {
                 gameState = LOST;
             if(snake.eat_fruit(fruit)){
                 ++points;
+                auto lastPoint = snake.get_point(snake.length() - 1);
+                snake.grow(cv::Point(lastPoint.x - 2, lastPoint.y - 2));
                 generate_fruit();
             }
             this->draw(frame);
