@@ -12,13 +12,13 @@
 
 namespace {
 
-    void end_processes(std::vector<pid_t>& children) {
-        for (auto& pid : children)
-            if (kill(pid, 0) == 0) {
-                if (kill(pid, SIGINT) != 0)
-                    std::cerr << "WARNING: Unable to kill process with pid: " << pid << std::endl;
+    void end_processes(std::vector<std::pair<pid_t, char*>>& children) {
+        for (auto& pair : children)
+            if (kill(pair.first, 0) == 0) {
+                if (kill(pair.first, SIGINT) != 0)
+                    std::cerr << "WARNING: Unable to kill process " << pair.second << " with pid: " << pair.first << std::endl;
             } else {
-                std::cout << "Process with pid: " << pid << " died" << std::endl;
+                std::cout << "Process " << pair.second << " (pid: " << pair.first << ") died." << std::endl;
             }
     }
 
@@ -50,7 +50,7 @@ namespace {
             sem_unlink(pair.first);
     }
 
-    pid_t start_process(char* argv[]) {
+    std::pair<pid_t, char*> start_process(char* argv[]) {
 
         pid_t result = fork();
 
@@ -60,7 +60,7 @@ namespace {
         if (result == 0)
             execv(argv[0], argv);
 
-        return result;
+        return std::make_pair(result, argv[0]);
     }
 
 
@@ -68,13 +68,22 @@ namespace {
 
         std::vector<std::pair<char*, unsigned int>> block_with_sizes =
                 std::vector<std::pair<char*, unsigned int>>({{CAPTURE_PROCESS_BLOCK, FRAME_SIZE},
-                                                             {PROCESS_GAME_BLOCK,    FRAME_SIZE}});
+                                                             {PROCESS_GAME_BLOCK,    FRAME_SIZE},
+                                                             {CAPTURE_INFO_BLOCK, INFO_MESS_SIZE},
+                                                             {PROCESS_INFO_BLOCK, INFO_MESS_SIZE},
+                                                             {GAME_INFO_BLOCK, INFO_MESS_SIZE}});
 
         std::vector<std::pair<char*, unsigned int>> semaphores_with_values =
                 std::vector<std::pair<char*, unsigned int>> ({{CAPTURE_PROCESS_SEM, 0},
                                                               {PROCESS_CAPTURE_SEM, 1},
                                                               {PROCESS_GAME_SEM, 0},
-                                                              {GAME_PROCESS_SEM, 1}});
+                                                              {GAME_PROCESS_SEM, 1},
+                                                              {CAPTURE_INFO_SEM, 0},
+                                                              {INFO_CAPTURE_SEM, 1},
+                                                              {PROCESS_INFO_SEM, 0},
+                                                              {INFO_PROCESS_SEM, 1},
+                                                              {GAME_INFO_SEM, 0},
+                                                              {INFO_GAME_SEM, 1}});
 
         try {
             create_blocks(block_with_sizes);
@@ -86,18 +95,24 @@ namespace {
             exit(-1);
         }
 
-        char* capture_param[] = {CAPTURE, SEM_SYNC, CAPTURE_PROCESS_SEM, PROCESS_CAPTURE_SEM, CAPTURE_PROCESS_BLOCK, nullptr};
+        char* capture_param[] = {CAPTURE, SEM_SYNC, CAPTURE_PROCESS_SEM, PROCESS_CAPTURE_SEM, CAPTURE_PROCESS_BLOCK,
+                                                    CAPTURE_INFO_SEM, INFO_CAPTURE_SEM, CAPTURE_INFO_BLOCK, nullptr};
         char* process_param[] = {PROCESS, SEM_SYNC, PROCESS_CAPTURE_SEM, CAPTURE_PROCESS_SEM, CAPTURE_PROCESS_BLOCK,
-                                 PROCESS_GAME_SEM, GAME_PROCESS_SEM, PROCESS_GAME_BLOCK, nullptr};
-        char* game_process[] = {GAME, SEM_SYNC, GAME_PROCESS_SEM, PROCESS_GAME_SEM, PROCESS_GAME_BLOCK, nullptr};
-
-        std::vector<pid_t> children;
+                                                    PROCESS_GAME_SEM, GAME_PROCESS_SEM, PROCESS_GAME_BLOCK,
+                                                    PROCESS_INFO_SEM, INFO_PROCESS_SEM, PROCESS_INFO_BLOCK, nullptr};
+        char* game_process[] = {GAME, SEM_SYNC, GAME_PROCESS_SEM, PROCESS_GAME_SEM, PROCESS_GAME_BLOCK,
+                                                GAME_INFO_SEM, INFO_GAME_SEM, GAME_INFO_BLOCK, nullptr};
+        char* info_process[] = {INFO, SEM_SYNC, INFO_CAPTURE_SEM, CAPTURE_INFO_SEM, CAPTURE_INFO_BLOCK,
+                                                INFO_PROCESS_SEM, PROCESS_INFO_SEM, PROCESS_INFO_BLOCK,
+                                                INFO_GAME_SEM, GAME_INFO_SEM, GAME_INFO_BLOCK, nullptr};
+        std::vector<std::pair<pid_t, char*>> children;
 
         try {
 
             children.emplace_back(start_process(capture_param));
             children.emplace_back(start_process(process_param));
             children.emplace_back(start_process(game_process));
+            children.emplace_back(start_process(info_process));
 
         } catch (std::runtime_error& e) {
             std::cerr << e.what() << std::endl;
@@ -114,12 +129,12 @@ namespace {
         destroy_blocks(block_with_sizes);
     }
 
-    void create_queues(std::vector<char*>& queues, unsigned int mess_size) {
+    void create_queues(std::vector<char*>& queues) {
 
         mq_attr attr {};
         attr.mq_flags = 0;
         attr.mq_maxmsg = 1;
-        attr.mq_msgsize = mess_size;
+        attr.mq_msgsize = MESS_SIZE;
         attr.mq_curmsgs = 0;
 
         for (auto& q : queues) {
@@ -134,52 +149,22 @@ namespace {
             mq_unlink(q);
     }
 
-
-    void start_processes_using_queues() {
-
-        std::vector<char* > queues = std::vector<char*> ({CAPTURE_PROCESS_QUEUE, PROCESS_GAME_QUEUE});
-
-        try {
-            create_queues(queues, FRAME_SIZE);
-        } catch (std::runtime_error& e) {
-            std::cerr << e.what() << std::endl;
-            destroy_queues(queues);
-            exit(-1);
-        }
-
-        char* capture_param[] = {CAPTURE, QUEUE_SYNC, CAPTURE_PROCESS_QUEUE, nullptr};
-        char* process_param[] = {PROCESS, QUEUE_SYNC, CAPTURE_PROCESS_QUEUE, nullptr};
-
-        std::vector<pid_t> children;
-
-        try {
-
-            children.emplace_back(start_process(capture_param));
-            children.emplace_back(start_process(process_param));
-
-        } catch (std::runtime_error& e) {
-            std::cerr << e.what() << std::endl;
-            end_processes(children);
-            destroy_queues(queues);
-            exit(-1);
-        }
-
-        wait(nullptr);
-
-        end_processes(children);
-        destroy_queues(queues);
-    }
-
     void start_process_using_mem_and_queues() {
 
         std::vector<std::pair<char*, unsigned int>> block_with_sizes =
                 std::vector<std::pair<char*, unsigned int>>({{CAPTURE_PROCESS_BLOCK, FRAME_SIZE},
-                                                             {PROCESS_GAME_BLOCK,    FRAME_SIZE}});
-        std::vector<char* > queues = std::vector<char*> ({CAPTURE_SEND_QUEUE, CAPTURE_RECV_QUEUE,
-                                                          PROCESS_RECV_QUEUE, PROCESS_SEND_QUEUE});
+                                                             {PROCESS_GAME_BLOCK,    FRAME_SIZE},
+                                                             {CAPTURE_INFO_BLOCK, INFO_MESS_SIZE},
+                                                             {PROCESS_INFO_BLOCK, INFO_MESS_SIZE},
+                                                             {GAME_INFO_BLOCK, INFO_MESS_SIZE}});
+        std::vector<char* > queues = std::vector<char*> ({CAPTURE_PROCESS_SEND_QUEUE, CAPTURE_PROCESS_RECV_QUEUE,
+                                                          PROCESS_GAME_RECV_QUEUE, PROCESS_GAME_SEND_QUEUE,
+                                                          CAPTURE_INFO_SEND_QUEUE, CAPTURE_INFO_RECV_QUEUE,
+                                                          PROCESS_INFO_SEND_QUEUE, PROCESS_INFO_RECV_QUEUE,
+                                                          GAME_INFO_SEND_QUEUE, GAME_INFO_RECV_QUEUE});
 
         try {
-            create_queues(queues, MESS_SIZE);
+            create_queues(queues);
             create_blocks(block_with_sizes);
         } catch (std::runtime_error& e) {
             std::cerr << e.what() << std::endl;
@@ -188,18 +173,25 @@ namespace {
             exit(-1);
         }
 
-        char* capture_param[] = {CAPTURE, QUEUE_MEM_SYNC, CAPTURE_SEND_QUEUE, CAPTURE_RECV_QUEUE, CAPTURE_PROCESS_BLOCK, nullptr};
-        char* process_param[] = {PROCESS, QUEUE_MEM_SYNC, CAPTURE_SEND_QUEUE, CAPTURE_RECV_QUEUE, CAPTURE_PROCESS_BLOCK,
-                                 PROCESS_SEND_QUEUE, PROCESS_RECV_QUEUE, PROCESS_GAME_BLOCK, nullptr};
-        char* game_param[] = {GAME, QUEUE_MEM_SYNC, PROCESS_SEND_QUEUE, PROCESS_RECV_QUEUE, PROCESS_GAME_BLOCK, nullptr};
+        char* capture_param[] = {CAPTURE, QUEUE_MEM_SYNC, CAPTURE_PROCESS_SEND_QUEUE, CAPTURE_PROCESS_RECV_QUEUE, CAPTURE_PROCESS_BLOCK,
+                                                        CAPTURE_INFO_SEND_QUEUE, CAPTURE_INFO_RECV_QUEUE, CAPTURE_INFO_BLOCK, nullptr};
+        char* process_param[] = {PROCESS, QUEUE_MEM_SYNC, CAPTURE_PROCESS_SEND_QUEUE, CAPTURE_PROCESS_RECV_QUEUE, CAPTURE_PROCESS_BLOCK,
+                                                        PROCESS_GAME_SEND_QUEUE, PROCESS_GAME_RECV_QUEUE, PROCESS_GAME_BLOCK,
+                                                        PROCESS_INFO_SEND_QUEUE, PROCESS_INFO_RECV_QUEUE, PROCESS_INFO_BLOCK, nullptr};
+        char* game_param[] = {GAME, QUEUE_MEM_SYNC, PROCESS_GAME_SEND_QUEUE, PROCESS_GAME_RECV_QUEUE, PROCESS_GAME_BLOCK,
+                                                        GAME_INFO_SEND_QUEUE, GAME_INFO_RECV_QUEUE, GAME_INFO_BLOCK, nullptr};
+        char* info_param[] = {INFO, QUEUE_MEM_SYNC, CAPTURE_INFO_SEND_QUEUE, CAPTURE_INFO_RECV_QUEUE, CAPTURE_INFO_BLOCK,
+                                                    PROCESS_INFO_SEND_QUEUE, PROCESS_INFO_RECV_QUEUE, PROCESS_INFO_BLOCK,
+                                                    GAME_INFO_SEND_QUEUE, GAME_INFO_RECV_QUEUE, GAME_INFO_BLOCK, nullptr};
 
-        std::vector<pid_t> children;
+        std::vector<std::pair<pid_t, char*>> children;
 
         try {
 
             children.emplace_back(start_process(capture_param));
             children.emplace_back(start_process(process_param));
             children.emplace_back(start_process(game_param));
+            children.emplace_back(start_process(info_param));
 
         } catch (std::runtime_error& e) {
             std::cerr << e.what() << std::endl;
@@ -217,19 +209,7 @@ namespace {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
 }
-
 
 
 int main(int argc, char const* argv[]){
@@ -245,8 +225,6 @@ int main(int argc, char const* argv[]){
         start_processes_using_semaphores();
     else if (sync_mode == QUEUES_MEM_SYNC)
         start_process_using_mem_and_queues();
-    else if (sync_mode == QUEUES_RAW_SYNC)
-        start_processes_using_queues();
     else
         std::cerr << "Wrong synchronization mode." << std::endl;
 

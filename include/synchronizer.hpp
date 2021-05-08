@@ -15,7 +15,17 @@
 
 using char_t = const char*;
 
-class SharedMemorySemaphoresSynchronizer {
+class Synchronizer {
+
+public:
+
+    virtual void send_data(void* data, unsigned int size) = 0;
+    virtual void receive_data(void* data, unsigned int size) = 0;
+    virtual void close_opened_resources() = 0;
+};
+
+
+class SharedMemorySemaphoresSynchronizer: public Synchronizer {
 
 private:
 
@@ -31,33 +41,15 @@ private:
 public:
     SharedMemorySemaphoresSynchronizer();
     SharedMemorySemaphoresSynchronizer(char_t sem_our_n, char_t sem_opp_n, char_t block_n);
-    ~SharedMemorySemaphoresSynchronizer();
 
-    void close_opened_resources();
+    void close_opened_resources() override;
 
-    void send_data(void* data, unsigned int size);
-    void receive_data(void* data, unsigned int size);
+    void send_data(void* data, unsigned int size) override;
+    void receive_data(void* data, unsigned int size) override;
 
 };
 
-
-class RawQueuesSynchronizer {
-
-private:
-
-    mqd_t queue_desc;
-
-public:
-    RawQueuesSynchronizer();
-    explicit RawQueuesSynchronizer(char_t queue_name);
-
-    void read_data(void* data, unsigned int size) const;
-    void send_data(void* data, unsigned int size) const;
-
-    void close_opened_resources() const;
-};
-
-class QueueSharedMemorySynchronizer {
+class QueueSharedMemorySynchronizer: public Synchronizer {
 
 private:
 
@@ -72,13 +64,10 @@ public:
     QueueSharedMemorySynchronizer();
     QueueSharedMemorySynchronizer(char_t queue_sent_name, char_t queue_done_name, char_t block_name);
 
-    void receive_data(void* data, unsigned int size);
-    void send_data(void* data, unsigned int size);
+    void receive_data(void* data, unsigned int size) override;
+    void send_data(void* data, unsigned int size) override;
 
-    void close_opened_resources();
+    void close_opened_resources() override;
 };
-
-
-
 
 #endif //SCZR_SNAKE_SYNCHRONIZER_HPP

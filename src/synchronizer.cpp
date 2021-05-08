@@ -2,7 +2,6 @@
 // Created by radoslaw on 05.05.2021.
 //
 #include "synchronizer.hpp"
-#include <unistd.h>
 
 SharedMemorySemaphoresSynchronizer::SharedMemorySemaphoresSynchronizer() : sem_our(nullptr), sem_opp(nullptr),
 filename(nullptr), block(nullptr) {}
@@ -70,36 +69,7 @@ void SharedMemorySemaphoresSynchronizer::receive_data(void *data, unsigned int s
     leave_critical_section();
 }
 
-SharedMemorySemaphoresSynchronizer::~SharedMemorySemaphoresSynchronizer() {
-    close_opened_resources();
-}
-
-RawQueuesSynchronizer::RawQueuesSynchronizer(): queue_desc(-1) {}
-
-RawQueuesSynchronizer::RawQueuesSynchronizer(char_t queue_name) {
-
-    queue_desc = mq_open(queue_name, O_RDWR);
-
-    if (queue_desc == -1)
-        throw std::runtime_error("ERROR: Unable to open queue.");
-}
-
-void RawQueuesSynchronizer::read_data(void *data, unsigned int size) const {
-    if (mq_receive(queue_desc, (char*) data, size, NULL) == -1)
-        std::cerr << "Warning: Unable to receive message with errno " << errno << std::endl;
-}
-
-void RawQueuesSynchronizer::close_opened_resources() const {
-    mq_close(queue_desc);
-}
-
-void RawQueuesSynchronizer::send_data(void *data, unsigned int size) const {
-
-    if (mq_send(queue_desc, (char*) data, size, 1) == -1)
-        std::cerr << "Warning: Unable to send message" << std::endl;
-}
-
-QueueSharedMemorySynchronizer::QueueSharedMemorySynchronizer(): queue_sent(-1), block(nullptr), filename(nullptr) {}
+QueueSharedMemorySynchronizer::QueueSharedMemorySynchronizer(): queue_sent(-1), queue_done(-1), block(nullptr), filename(nullptr) {}
 
 QueueSharedMemorySynchronizer::QueueSharedMemorySynchronizer(char_t queue_sent_name, char_t queue_done_name, char_t block_name) {
 
