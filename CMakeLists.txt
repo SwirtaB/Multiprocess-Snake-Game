@@ -30,7 +30,7 @@ add_executable(capture src/capture.cpp src/CaptureVideo.cpp)
 add_executable(process src/process.cpp src/ImageProcessing.cpp src/Snake.cpp)
 add_executable(game src/game.cpp)
 add_executable(start src/start.cpp)
-add_executable(info src/info.cpp)
+add_executable(info src/info.cpp src/Log.cpp)
 
 target_link_libraries(shared_memory_lib rt)
 target_link_libraries(synchronizer_lib shared_memory_lib)

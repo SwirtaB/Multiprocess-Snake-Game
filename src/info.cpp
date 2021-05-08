@@ -5,24 +5,40 @@
 #include <iostream>
 #include "synchronizer.hpp"
 #include "constants.hpp"
+#include "Log.hpp"
 
 namespace {
 
     [[noreturn]] void synchronize(Synchronizer& synchronizer_capture, Synchronizer& synchronizer_process, Synchronizer& synchronizer_game) {
-
+        std::string gameOff = "0";
+        Log log;
+        log.open_file();
         while (true) {
 
-            char buffer[INFO_MESS_SIZE];
-            synchronizer_capture.receive_data(buffer, INFO_MESS_SIZE);
-            std::cout << "From capture received: " << buffer << std::endl;
-            synchronizer_process.receive_data(buffer, INFO_MESS_SIZE);
-            std::cout << "From process received: " << buffer << std::endl;
+//            char buffer[INFO_MESS_SIZE];
+//            synchronizer_capture.receive_data(buffer, INFO_MESS_SIZE);
+//            std::cout << "From capture received: " << buffer << std::endl;
+//            synchronizer_process.receive_data(buffer, INFO_MESS_SIZE);
+//            std::cout << "From process received: " << buffer << std::endl;
 
 //            if (strcmp(buffer, "Image process adjust") != 0) {
 //                synchronizer_game.receive_data(buffer, INFO_MESS_SIZE);
 //                std::cout << "From game received: " << buffer << std::endl;
 //            }
 
+            char captureBuffer[INFO_MESS_SIZE];
+            char processBuffer[INFO_MESS_SIZE];
+            char gameBuffer[INFO_MESS_SIZE];
+            synchronizer_capture.receive_data(captureBuffer, INFO_MESS_SIZE);
+            synchronizer_process.receive_data(processBuffer, INFO_MESS_SIZE);
+            if(processBuffer[0] != 'P'){
+                synchronizer_game.receive_data(gameBuffer, INFO_MESS_SIZE);
+                log.convert_and_write(captureBuffer, processBuffer, gameBuffer);
+            }
+            else {
+                processBuffer[0] = ' ';
+                log.convert_and_write(captureBuffer, processBuffer, gameOff.c_str());
+            }
         }
     }
 

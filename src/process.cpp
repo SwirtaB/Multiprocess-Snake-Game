@@ -30,7 +30,7 @@ namespace {
             //Konwertowanie time_point na char * by można było przesłać
             std::chrono::duration<double> captureTime = end - begin;
             auto x = std::chrono::duration_cast<std::chrono::microseconds>(captureTime);
-            std::string process_info_str = std::to_string(x.count());
+            std::string process_info_str = result.first ? std::to_string(x.count()) : "P" + std::to_string(x.count());
             char* process_info = (char *) process_info_str.c_str();
             //char* process_info = result.first ? (char*) "Process image info" : (char*) "Image process adjust";
             synchronizer_info.send_data((void*)process_info, INFO_MESS_SIZE);
