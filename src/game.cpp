@@ -7,7 +7,7 @@
 
 #include "constants.hpp"
 #include "synchronizer.hpp"
-
+#include "Snake.hpp"
 
 namespace {
 
@@ -21,12 +21,12 @@ namespace {
         try {
 
             SharedMemorySemaphoresSynchronizer synchronizer(argv[2], argv[3], argv[4]);
+            Game game(cv::Point(FRAME_HEIGHT, FRAME_WIDTH));
+            bool close = false;
 
-            while (true) {
+            while (!close) {
                 cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
                 synchronizer.receive_data(frame.data, FRAME_SIZE);
-                cv::imshow("Game received", frame);
-                cv::waitKey(1);
             }
 
 
@@ -53,8 +53,8 @@ namespace {
                 cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
 
                 synchronizer.receive_data(frame.data, FRAME_SIZE);
-                cv::imshow("Game received", frame);
-                cv::waitKey(1);
+                //cv::imshow("Game received", frame);
+                //cv::waitKey(1);
             }
 
 

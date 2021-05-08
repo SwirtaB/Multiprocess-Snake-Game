@@ -6,28 +6,27 @@
 #define SCZR_SNAKE_SNAKE_HPP
 
 #include <opencv4/opencv2/imgproc.hpp>
+#include <opencv4/opencv2/highgui.hpp>
 #include <deque>
 
-typedef std::pair<cv::Point2f, float> Circle;
-
-const int fruitRadius = 10;
+const int fruitRadius = 20;
 
 enum GAME_STATE{
     PREPARING,
     PLAYING,
-    PAUSED,
     LOST,
     ENDED
 };
 
 class Snake{
 public:
+    void clear_snake();
     void grow(cv::Point chunk);
     void move(cv::Point point);
     int length();
     void draw(cv::Mat &frame);
     bool check_snake();
-    bool eat_fruit(cv::Point fruit);
+    bool eat_fruit(cv::Point &fruit);
     cv::Point get_point(int i);
 
 private:
@@ -40,15 +39,17 @@ private:
 class Game{
 public:
     void draw(cv::Mat &frame);
-    void create_snake(cv::Point head);
+    void draw_lost_message(cv::Mat &frame);
+    void draw_info_message(cv::Mat &frame);
+    void create_snake(cv::Point &head);
     void generate_fruit();
-    void run();
+    void run(cv::Point &marker, cv::Mat &frame, bool *close);
 
-    Game(int sizeX_, int sizeY_) : gameState(PREPARING), points(0), lives(3), sizeX(sizeX_), sizeY(sizeY_) {}
+    Game(cv::Point windowSize_) : gameState(PREPARING), points(0), lives(3), windowSize(windowSize_) {}
 private:
     GAME_STATE gameState;
     int points, lives;
-    int sizeX, sizeY;
+    cv::Point windowSize;
     cv::Point fruit;
     Snake snake;
 
