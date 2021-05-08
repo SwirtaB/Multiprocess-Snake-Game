@@ -3,6 +3,7 @@
 //
 #include <iostream>
 #include <opencv4/opencv2/imgcodecs.hpp>
+#include <opencv2/highgui.hpp>
 
 #include "constants.hpp"
 #include "synchronizer.hpp"
@@ -12,8 +13,13 @@ namespace {
     [[noreturn]] void synchronize(Synchronizer& synchronizer_process, Synchronizer& synchronizer_info) {
 
         while (true) {
+            float x_, y_;
             cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
+
             synchronizer_process.receive_data(frame.data, FRAME_SIZE);
+            memcpy(&x_, frame.data, sizeof(float));
+            memcpy(&y_, frame.data+sizeof(float), sizeof(float));
+
             char* game_info = (char*)"Game info";
             synchronizer_info.send_data((void*) game_info, INFO_MESS_SIZE);
         }

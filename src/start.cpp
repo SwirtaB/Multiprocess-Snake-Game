@@ -68,7 +68,7 @@ namespace {
 
         std::vector<std::pair<char*, unsigned int>> block_with_sizes =
                 std::vector<std::pair<char*, unsigned int>>({{CAPTURE_PROCESS_BLOCK, FRAME_SIZE},
-                                                             {PROCESS_GAME_BLOCK,    FRAME_SIZE},
+                                                             {PROCESS_GAME_BLOCK, FRAME_SIZE},
                                                              {CAPTURE_INFO_BLOCK, INFO_MESS_SIZE},
                                                              {PROCESS_INFO_BLOCK, INFO_MESS_SIZE},
                                                              {GAME_INFO_BLOCK, INFO_MESS_SIZE}});
