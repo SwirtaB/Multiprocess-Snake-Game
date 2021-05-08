@@ -3,6 +3,7 @@
 //
 #include <iostream>
 #include <opencv4/opencv2/imgcodecs.hpp>
+#include <chrono>
 #include "synchronizer.hpp"
 #include "CaptureVideo.hpp"
 
@@ -14,8 +15,16 @@ namespace {
         capture.open();
 
         while (true) {
+            std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
             cv::Mat frame = capture.capture();
-            char *capture_info = (char *) "Capture info";
+            std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
+
+            //Konwertowanie time_point na char * by można było przesłać
+            std::chrono::duration<double> captureTime = end - begin;
+            auto x = std::chrono::duration_cast<std::chrono::microseconds>(captureTime);
+            std::string capture_info_str = std::to_string(x.count());
+            char *capture_info = (char *) capture_info_str.c_str();
+
             synchronizer_info.send_data(capture_info, INFO_MESS_SIZE);
             synchronizer_process.send_data(frame.data, FRAME_SIZE);
         }
