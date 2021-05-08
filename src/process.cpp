@@ -10,7 +10,7 @@
 
 namespace {
 
-    [[noreturn]] void synchronize(Synchronizer& synchronizer_capture, Synchronizer& synchronizer_game, Synchronizer& synchronizer_info) {
+    void synchronize(Synchronizer& synchronizer_capture, Synchronizer& synchronizer_game, Synchronizer& synchronizer_info) {
 
         ImageProcessing processor;
 

@@ -15,7 +15,6 @@ const unsigned int MESS_SIZE = 4;
 
 const unsigned int SEMAPHORES_SYNC = 0;
 const unsigned int QUEUES_MEM_SYNC = 1;
-const unsigned int QUEUES_RAW_SYNC = 2;
 
 /** Semaphores synchronization constants */
 #define SEM_SYNC (char*) "0"
@@ -65,14 +64,5 @@ const unsigned int QUEUES_RAW_SYNC = 2;
 
 #define SENT_MESS (const char*) "Sent"
 #define DONE_MESS (const char*) "Done"
-
-
-/** Queues synchronization constants */
-#define QUEUE_SYNC (char*) "2"
-
-#define CAPTURE_PROCESS_QUEUE (char*) "/capture_process_queue"
-#define PROCESS_GAME_QUEUE (char*) "/process_game_queue"
-
-
 
 #endif //SCZR_SNAKE_CONSTANTS_HPP
