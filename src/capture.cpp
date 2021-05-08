@@ -8,27 +8,26 @@
 
 namespace {
 
-    void sync_with_semaphores(int argc, char const* argv[]) {
+    [[noreturn]] [[noreturn]] void synchronize(Synchronizer& synchronizer_process, Synchronizer& synchronizer_info) {
 
-        if (argc != 8) {
-            std::cerr << "CRITICAL ERROR: Not enough parameters for semaphores capture process synchronization." << std::endl;
-            exit(-1);
+        Capture capture;
+        capture.open();
+
+        while (true) {
+            cv::Mat frame = capture.capture();
+            char *capture_info = (char *) "Capture info";
+            synchronizer_info.send_data(capture_info, INFO_MESS_SIZE);
+            synchronizer_process.send_data(frame.data, FRAME_SIZE);
         }
+    }
+
+    void sync_with_semaphores(char const* argv[]) {
 
         try {
             SharedMemorySemaphoresSynchronizer synchronizer_process(argv[2], argv[3], argv[4]);
             SharedMemorySemaphoresSynchronizer synchronizer_info(argv[5], argv[6], argv[7]);
 
-            Capture capture;
-            capture.open();
-
-            while(true) {
-                cv::Mat frame = capture.capture();
-
-                char* capture_info = (char*) "Capture info";
-                synchronizer_info.send_data(capture_info, INFO_MESS_SIZE);
-                synchronizer_process.send_data(frame.data, FRAME_SIZE);
-            }
+            synchronize(synchronizer_process, synchronizer_info);
 
         } catch (std::runtime_error& e) {
             std::cerr << "Capture: " << e.what() << std::endl;
@@ -37,56 +36,14 @@ namespace {
 
     }
 
-    void sync_with_queues(int argc, char const* argv[]) {
-
-        if (argc != 3) {
-            std::cerr << "CRITICAL ERROR: Not enough parameters for queue capture process synchronization.";
-            exit(-1);
-        }
-
-        try {
-
-            RawQueuesSynchronizer synchronizer(argv[2]);
-            Capture capture;
-            capture.open();
-
-            for (int i = 0; i < 100; i++) {
-                cv::Mat frame = capture.capture();
-                synchronizer.send_data(frame.data, FRAME_SIZE);
-            }
-
-            synchronizer.close_opened_resources();
-
-        } catch (std::runtime_error& e) {
-            std::cerr << "Capture process: " << e.what();
-            exit(-1);
-        }
-
-    }
-
-    void sync_with_queues_and_mem(int argc, const char* argv[]) {
-
-        if (argc != 8) {
-            std::cerr << "Capture process: wrong number of parameters for queues and memory synchronization" << std::endl;
-            exit(-1);
-        }
+    void sync_with_queues_and_mem(const char* argv[]) {
 
         try {
 
             QueueSharedMemorySynchronizer synchronizer_process(argv[2], argv[3], argv[4]);
             QueueSharedMemorySynchronizer synchronizer_info(argv[5], argv[6], argv[7]);
-            Capture capture;
-            capture.open();
 
-            while (true) {
-                cv::Mat frame = capture.capture();
-
-                char* capture_info = (char*) "Capture info";
-                synchronizer_info.send_data(capture_info, INFO_MESS_SIZE);
-                synchronizer_process.send_data(frame.data, FRAME_SIZE);
-            }
-
-            synchronizer_process.close_opened_resources();
+            synchronize(synchronizer_process, synchronizer_info);
 
         } catch (std::runtime_error& e) {
             std::cerr << "Capture process: " << e.what() << std::endl;
@@ -94,29 +51,22 @@ namespace {
         }
 
     }
-
-
 }
-
-
-
 
 
 int main(int argc, char const* argv[]) {
 
-    if (argc < 2) {
-        std::cerr << "CRITICAL ERROR: Not enough parameters to run process responsible for capturing camera image"<< std::endl;
-        return -1;
+    if (argc != 8) {
+        std::cerr << "CRITICAL ERROR: Not enough parameters for semaphores capture process synchronization." << std::endl;
+        exit(-1);
     }
 
     unsigned int syn_mode = std::atoi(argv[1]);
 
     if (syn_mode == SEMAPHORES_SYNC)
-        sync_with_semaphores(argc, argv);
-    else if (syn_mode == QUEUES_RAW_SYNC)
-        sync_with_queues(argc, argv);
+        sync_with_semaphores(argv);
     else if (syn_mode == QUEUES_MEM_SYNC)
-        sync_with_queues_and_mem(argc, argv);
+        sync_with_queues_and_mem(argv);
     else
         std::cerr << "WRONG SYNC METHOD" << std::endl;
 

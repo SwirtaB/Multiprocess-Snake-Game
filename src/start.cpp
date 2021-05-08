@@ -129,12 +129,12 @@ namespace {
         destroy_blocks(block_with_sizes);
     }
 
-    void create_queues(std::vector<char*>& queues, unsigned int mess_size) {
+    void create_queues(std::vector<char*>& queues) {
 
         mq_attr attr {};
         attr.mq_flags = 0;
         attr.mq_maxmsg = 1;
-        attr.mq_msgsize = mess_size;
+        attr.mq_msgsize = MESS_SIZE;
         attr.mq_curmsgs = 0;
 
         for (auto& q : queues) {
@@ -147,42 +147,6 @@ namespace {
     void destroy_queues(std::vector<char*>& queues) {
         for (auto& q : queues)
             mq_unlink(q);
-    }
-
-
-    void start_processes_using_queues() {
-
-        std::vector<char* > queues = std::vector<char*> ({CAPTURE_PROCESS_QUEUE, PROCESS_GAME_QUEUE});
-
-        try {
-            create_queues(queues, FRAME_SIZE);
-        } catch (std::runtime_error& e) {
-            std::cerr << e.what() << std::endl;
-            destroy_queues(queues);
-            exit(-1);
-        }
-
-        char* capture_param[] = {CAPTURE, QUEUE_SYNC, CAPTURE_PROCESS_QUEUE, nullptr};
-        char* process_param[] = {PROCESS, QUEUE_SYNC, CAPTURE_PROCESS_QUEUE, nullptr};
-
-        std::vector<std::pair<pid_t, char*>> children;
-
-        try {
-
-            children.emplace_back(start_process(capture_param));
-            children.emplace_back(start_process(process_param));
-
-        } catch (std::runtime_error& e) {
-            std::cerr << e.what() << std::endl;
-            end_processes(children);
-            destroy_queues(queues);
-            exit(-1);
-        }
-
-        wait(nullptr);
-
-        end_processes(children);
-        destroy_queues(queues);
     }
 
     void start_process_using_mem_and_queues() {
@@ -200,7 +164,7 @@ namespace {
                                                           GAME_INFO_SEND_QUEUE, GAME_INFO_RECV_QUEUE});
 
         try {
-            create_queues(queues, MESS_SIZE);
+            create_queues(queues);
             create_blocks(block_with_sizes);
         } catch (std::runtime_error& e) {
             std::cerr << e.what() << std::endl;
@@ -261,8 +225,6 @@ int main(int argc, char const* argv[]){
         start_processes_using_semaphores();
     else if (sync_mode == QUEUES_MEM_SYNC)
         start_process_using_mem_and_queues();
-    else if (sync_mode == QUEUES_RAW_SYNC)
-        start_processes_using_queues();
     else
         std::cerr << "Wrong synchronization mode." << std::endl;
 
