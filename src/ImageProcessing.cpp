@@ -94,14 +94,14 @@ bool ImageProcessing::end() const {
     return status == END_STATUS;
 }
 
-std::pair<bool, cv::Mat> ImageProcessing::run(cv::Mat& rec_frame, Game &game) {
+std::pair<Point2f, cv::Mat> ImageProcessing::run(cv::Mat& rec_frame, Game &game) {
     if (status == ADJUST_STATUS)
         modify_color_search(rec_frame);
     else if (status == DISPLAY_STATUS) {
         cv::Mat frame, gameFrame;
 
         if (rec_frame.empty()) {
-            return std::make_pair(false, rec_frame);
+            return std::make_pair(Point2f(), rec_frame);
         }
 
         flip(rec_frame, frame, 1);
@@ -116,8 +116,12 @@ std::pair<bool, cv::Mat> ImageProcessing::run(cv::Mat& rec_frame, Game &game) {
             set_status(key == ESC_BUTTON ? END_STATUS : ADJUST_STATUS);
         if(close)
             set_status(END_STATUS);
-        return std::make_pair(status == DISPLAY_STATUS, gameFrame);
+        return std::make_pair(marker.first, gameFrame);
     }
 
-    return std::make_pair(false, rec_frame);
+    return std::make_pair(Point2f(), rec_frame);
+}
+
+bool ImageProcessing::send_result() const {
+    return status == DISPLAY_STATUS;
 }

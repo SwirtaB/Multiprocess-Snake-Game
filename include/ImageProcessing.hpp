@@ -22,9 +22,10 @@ class ImageProcessing{
 public:
     void modify_color_search(cv::Mat& rec_frame);
     std::pair<cv::Point2f, float> find_marker(cv::Mat &frame) const;
-    std::pair<bool, cv::Mat> run(cv::Mat& rec_frame, Game &game);
+    std::pair<cv::Point2f, cv::Mat> run(cv::Mat& rec_frame, Game &game);
 
     bool end() const;
+    bool send_result() const;
 
 private:
 
@@ -40,7 +41,6 @@ private:
     void destroy_filtering_window();
 
     void set_status(unsigned int new_status);
-
     cv::Mat perform_filtering(cv::Mat& rec_frame) const;
 };
 

@@ -31,12 +31,16 @@ namespace {
             std::chrono::duration<double> captureTime = end - begin;
             auto x = std::chrono::duration_cast<std::chrono::microseconds>(captureTime);
             std::string process_info_str = std::to_string(x.count());
-            char* process_info = (char *) process_info_str.c_str();
-            //char* process_info = result.first ? (char*) "Process image info" : (char*) "Image process adjust";
+            // char* process_info = (char *) process_info_str.c_str();
+            // Altered message sending in order to see full processes synchronization
+            char* process_info = processor.send_result() ? (char*) "Process image info" : (char*) "Image process adjust";
             synchronizer_info.send_data((void*)process_info, INFO_MESS_SIZE);
 
-            if (result.first)
+            if (processor.send_result()) {
+                memcpy(result.second.data, &result.first.x, sizeof(float));
+                memcpy(result.second.data+sizeof(float), &result.first.y, sizeof(float));
                 synchronizer_game.send_data(result.second.data, FRAME_SIZE);
+            }
 
         }
     }
