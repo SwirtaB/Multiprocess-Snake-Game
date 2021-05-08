@@ -31,7 +31,7 @@ Point Snake::get_point(int i) {
 void Snake::draw(cv::Mat &frame) {
     if (snakeBody.size() > 1)
         for (auto it = snakeBody.crbegin(); it != snakeBody.crend() - 1; ++it)
-            cv::line(frame, *it, *(it + 1), {127, 8, 255}, 5);
+            cv::line(frame, *it, *(it + 1), {0, 200, 0}, 5);
 }
 int Snake::orientation(const cv::Point &a, const cv::Point &b, const cv::Point &c) {
     int value = int(((b.y - a.y) * (c.x - b.x)) - ((b.x - a.x) * (c.y - b.y)));
@@ -96,7 +96,11 @@ void Game::draw_info_message(cv::Mat &frame) {
     putText(frame, "By rozpoczac od nowa kliknij R, by wyjsc kliknij Esc", Point(windowSize.x/2 - 400, windowSize.y/2), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 2);
 }
 
-void Game::run(Point &marker, Mat &frame, bool *close) {
+GAME_STATE Game::get_state() {
+    return gameState;
+}
+
+void Game::run(Point &marker, Mat &frame) {
     switch (gameState) {
         case PREPARING:
             create_snake(marker);
@@ -132,7 +136,7 @@ void Game::run(Point &marker, Mat &frame, bool *close) {
 
             int key = waitKey(1);
             if(key == 27)
-                *close = true;
+                gameState = QUIT;
             else if(key == 114)
                 gameState = PREPARING;
             break;

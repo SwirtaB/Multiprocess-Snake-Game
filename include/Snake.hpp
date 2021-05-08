@@ -15,7 +15,8 @@ enum GAME_STATE{
     PREPARING,
     PLAYING,
     LOST,
-    ENDED
+    ENDED,
+    QUIT
 };
 
 class Snake{
@@ -43,7 +44,8 @@ public:
     void draw_info_message(cv::Mat &frame);
     void create_snake(cv::Point &head);
     void generate_fruit();
-    void run(cv::Point &marker, cv::Mat &frame, bool *close);
+    void run(cv::Point &marker, cv::Mat &frame);
+    GAME_STATE get_state();
 
     Game(cv::Point windowSize_) : gameState(PREPARING), points(0), lives(3), windowSize(windowSize_) {}
 private:

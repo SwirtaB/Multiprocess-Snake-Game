@@ -27,8 +27,8 @@ add_library(
 )
 
 add_executable(capture src/capture.cpp src/CaptureVideo.cpp)
-add_executable(process src/process.cpp src/ImageProcessing.cpp src/Snake.cpp)
-add_executable(game src/game.cpp)
+add_executable(process src/process.cpp src/ImageProcessing.cpp)
+add_executable(game src/game.cpp src/Snake.cpp)
 add_executable(start src/start.cpp)
 add_executable(info src/info.cpp src/Log.cpp)
 

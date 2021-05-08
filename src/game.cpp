@@ -7,12 +7,13 @@
 
 #include "constants.hpp"
 #include "synchronizer.hpp"
+#include "Snake.hpp"
 
 namespace {
 
     [[noreturn]] void synchronize(Synchronizer& synchronizer_process, Synchronizer& synchronizer_info) {
-
-        while (true) {
+        Game game(cv::Point(FRAME_WIDTH, FRAME_HEIGHT));
+        while (game.get_state() != QUIT) {
             float x_, y_;
             cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
 
@@ -20,10 +21,19 @@ namespace {
             memcpy(&x_, frame.data, sizeof(float));
             memcpy(&y_, frame.data+sizeof(float), sizeof(float));
 
-            char* game_info = (char*)"Game info";
+            cv::Point marker = cv::Point(x_, y_);
+
+            std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
+            game.run(marker, frame);
+            cv::imshow("Game window", frame);
+            std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
+
+            std::chrono::duration<double> captureTime = end - begin;
+            auto x = std::chrono::duration_cast<std::chrono::microseconds>(captureTime);
+            std::string game_info_str = std::to_string(x.count());
+            char* game_info = (char *) game_info_str.c_str();
             synchronizer_info.send_data((void*) game_info, INFO_MESS_SIZE);
         }
-
     }
 
     void sync_with_semaphores(char const* argv[]) {

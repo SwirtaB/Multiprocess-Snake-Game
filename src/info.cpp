@@ -21,10 +21,10 @@ namespace {
 //            synchronizer_process.receive_data(buffer, INFO_MESS_SIZE);
 //            std::cout << "From process received: " << buffer << std::endl;
 
-            if (strcmp(buffer, "Image process adjust") != 0) {
-                synchronizer_game.receive_data(buffer, INFO_MESS_SIZE);
-                std::cout << "From game received: " << buffer << std::endl;
-            }
+//            if (strcmp(buffer, "Image process adjust") != 0) {
+//                synchronizer_game.receive_data(buffer, INFO_MESS_SIZE);
+//                std::cout << "From game received: " << buffer << std::endl;
+//            }
 
             char captureBuffer[INFO_MESS_SIZE];
             char processBuffer[INFO_MESS_SIZE];
