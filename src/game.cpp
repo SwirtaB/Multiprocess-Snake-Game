@@ -13,20 +13,23 @@ namespace {
 
     void sync_with_semaphores(int argc, char const* argv[]) {
 
-        if (argc != 5) {
+        if (argc != 8) {
             std::cerr << "CRITICAL ERROR: Not enough parameters for capture process synchronization." << std::endl;
             exit(-1);
         }
 
         try {
 
-            SharedMemorySemaphoresSynchronizer synchronizer(argv[2], argv[3], argv[4]);
+            SharedMemorySemaphoresSynchronizer synchronizer_process(argv[2], argv[3], argv[4]);
+            SharedMemorySemaphoresSynchronizer synchronizer_info(argv[5], argv[6], argv[7]);
             Game game(cv::Point(FRAME_HEIGHT, FRAME_WIDTH));
             bool close = false;
 
             while (!close) {
                 cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
-                synchronizer.receive_data(frame.data, FRAME_SIZE);
+                synchronizer_process.receive_data(frame.data, FRAME_SIZE);
+                char* game_info = (char*)"Game info";
+                synchronizer_info.send_data((void*) game_info, INFO_MESS_SIZE);
             }
 
 

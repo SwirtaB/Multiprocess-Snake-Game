@@ -30,10 +30,12 @@ add_executable(capture src/capture.cpp src/CaptureVideo.cpp)
 add_executable(process src/process.cpp src/ImageProcessing.cpp src/Snake.cpp)
 add_executable(game src/game.cpp)
 add_executable(start src/start.cpp)
+add_executable(info src/info.cpp)
 
 target_link_libraries(shared_memory_lib rt)
 target_link_libraries(synchronizer_lib shared_memory_lib)
 
+target_link_libraries(info synchronizer_lib)
 target_link_libraries(process synchronizer_lib ${OpenCV_LIBS})
 target_link_libraries(capture synchronizer_lib ${OpenCV_LIBS})
 target_link_libraries(game synchronizer_lib ${OpenCV_LIBS})

@@ -12,7 +12,7 @@ namespace {
 
     void sync_with_semaphores(int argc, char const* argv[]) {
 
-        if (argc != 8) {
+        if (argc != 11) {
             std::cerr << "CRITICAL ERROR: Not enough parameters for semaphores image process synchronization." << std::endl;
             exit(-1);
         }
@@ -21,6 +21,7 @@ namespace {
 
             SharedMemorySemaphoresSynchronizer synchronizer_capture(argv[2], argv[3], argv[4]);
             SharedMemorySemaphoresSynchronizer synchronizer_game(argv[5], argv[6], argv[7]);
+            SharedMemorySemaphoresSynchronizer synchronizer_info(argv[8], argv[9], argv[10]);
             ImageProcessing processor;
 
             //Test only
@@ -31,7 +32,11 @@ namespace {
 
                 cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
                 synchronizer_capture.receive_data(frame.data, FRAME_SIZE);
+
                 auto result = processor.run(frame, game);
+
+                char* process_info = result.first ? (char*) "Process image info" : (char*) "Image process adjust";
+                synchronizer_info.send_data((void*)process_info, INFO_MESS_SIZE);
 
                 if (result.first)
                     synchronizer_game.send_data(result.second.data, FRAME_SIZE);

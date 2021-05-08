@@ -9,8 +9,9 @@ const unsigned int FRAME_WIDTH = 1280;
 const unsigned int FRAME_HEIGHT = 720;
 const unsigned int FRAME_SIZE = 3 * FRAME_HEIGHT * FRAME_WIDTH;
 
-const unsigned int MESS_SIZE = 4;
+const unsigned int INFO_MESS_SIZE = 300;
 
+const unsigned int MESS_SIZE = 4;
 
 const unsigned int SEMAPHORES_SYNC = 0;
 const unsigned int QUEUES_MEM_SYNC = 1;
@@ -22,15 +23,27 @@ const unsigned int QUEUES_RAW_SYNC = 2;
 #define PROCESS (char*) "process"
 #define CAPTURE (char*) "capture"
 #define GAME (char*) "game"
+#define INFO (char*) "info"
+
 
 #define CAPTURE_PROCESS_SEM (char*) "/capture_process_sem"
 #define PROCESS_CAPTURE_SEM (char*) "/process_capture_sem"
+#define CAPTURE_INFO_SEM (char*) "/capture_info_sem"
+#define INFO_CAPTURE_SEM (char*) "/info_capture_sem"
 
 #define PROCESS_GAME_SEM (char*) "/process_game_sem"
 #define GAME_PROCESS_SEM (char*) "/game_process_sem"
+#define PROCESS_INFO_SEM (char*) "/process_info_sem"
+#define INFO_PROCESS_SEM (char*) "/info_process_sem"
+
+#define GAME_INFO_SEM (char*) "/game_info_sem"
+#define INFO_GAME_SEM (char*) "/info_game_sem"
 
 #define CAPTURE_PROCESS_BLOCK (char*) "/capture_process_shm"
 #define PROCESS_GAME_BLOCK (char*) "/process_game_shm"
+#define CAPTURE_INFO_BLOCK (char*) "/capture_info_shm"
+#define PROCESS_INFO_BLOCK (char*) "/process_info_shm"
+#define GAME_INFO_BLOCK (char*) "/game_info_shm"
 
 /** Queues and memory synchronization constants */
 #define QUEUE_MEM_SYNC (char*) "1"
