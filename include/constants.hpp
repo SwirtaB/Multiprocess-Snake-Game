@@ -48,11 +48,20 @@ const unsigned int QUEUES_RAW_SYNC = 2;
 /** Queues and memory synchronization constants */
 #define QUEUE_MEM_SYNC (char*) "1"
 
-#define CAPTURE_SEND_QUEUE (char*) "/capture_send_queue"
-#define CAPTURE_RECV_QUEUE (char*) "/capture_recv_queue"
+#define CAPTURE_PROCESS_SEND_QUEUE (char*) "/capture_process_send_queue"
+#define CAPTURE_PROCESS_RECV_QUEUE (char*) "/capture_process_recv_queue"
 
-#define PROCESS_SEND_QUEUE  (char*) "/process_send_queue"
-#define PROCESS_RECV_QUEUE  (char*) "/process_recv_queue"
+#define PROCESS_GAME_SEND_QUEUE  (char*) "/process_game_send_queue"
+#define PROCESS_GAME_RECV_QUEUE  (char*) "/process_game_recv_queue"
+
+#define CAPTURE_INFO_SEND_QUEUE (char*) "/capture_info_send_queue"
+#define CAPTURE_INFO_RECV_QUEUE (char*) "/capture_info_recv_queue"
+
+#define PROCESS_INFO_SEND_QUEUE (char*) "/process_info_send_queue"
+#define PROCESS_INFO_RECV_QUEUE (char*) "/process_info_recv_queue"
+
+#define GAME_INFO_SEND_QUEUE (char*) "/game_info_send_queue"
+#define GAME_INFO_RECV_QUEUE (char*) "/game_info_recv_queue"
 
 #define SENT_MESS (const char*) "Sent"
 #define DONE_MESS (const char*) "Done"
@@ -63,7 +72,6 @@ const unsigned int QUEUES_RAW_SYNC = 2;
 
 #define CAPTURE_PROCESS_QUEUE (char*) "/capture_process_queue"
 #define PROCESS_GAME_QUEUE (char*) "/process_game_queue"
-
 
 
 

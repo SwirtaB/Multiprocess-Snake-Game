@@ -30,8 +30,6 @@ namespace {
                 synchronizer_process.send_data(frame.data, FRAME_SIZE);
             }
 
-            synchronizer_process.close_opened_resources();
-
         } catch (std::runtime_error& e) {
             std::cerr << "Capture: " << e.what() << std::endl;
             exit(-1);
@@ -68,23 +66,27 @@ namespace {
 
     void sync_with_queues_and_mem(int argc, const char* argv[]) {
 
-        if (argc != 5) {
+        if (argc != 8) {
             std::cerr << "Capture process: wrong number of parameters for queues and memory synchronization" << std::endl;
             exit(-1);
         }
 
         try {
 
-            QueueSharedMemorySynchronizer synchronizer(argv[2], argv[3], argv[4]);
+            QueueSharedMemorySynchronizer synchronizer_process(argv[2], argv[3], argv[4]);
+            QueueSharedMemorySynchronizer synchronizer_info(argv[5], argv[6], argv[7]);
             Capture capture;
             capture.open();
 
-            for (int i = 0; i < 200; i++) {
+            while (true) {
                 cv::Mat frame = capture.capture();
-                synchronizer.send_data(frame.data, FRAME_SIZE);
+
+                char* capture_info = (char*) "Capture info";
+                synchronizer_info.send_data(capture_info, INFO_MESS_SIZE);
+                synchronizer_process.send_data(frame.data, FRAME_SIZE);
             }
 
-            synchronizer.close_opened_resources();
+            synchronizer_process.close_opened_resources();
 
         } catch (std::runtime_error& e) {
             std::cerr << "Capture process: " << e.what() << std::endl;

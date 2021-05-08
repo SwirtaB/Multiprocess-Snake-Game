@@ -49,7 +49,38 @@ namespace {
 
 
     void sync_with_queues_and_mem(int argc, const char* argv[]) {
-        //TODO implement
+
+        if (argc != 11) {
+            std::cerr << "CRITICAL ERROR: Not enough parameters for semaphores info process synchronization." << std::endl;
+            exit(-1);
+        }
+
+        try {
+
+            QueueSharedMemorySynchronizer synchronizer_capture(argv[2], argv[3], argv[4]);
+            QueueSharedMemorySynchronizer process_synchronizer(argv[5], argv[6], argv[7]);
+            QueueSharedMemorySynchronizer game_synchronizer(argv[8], argv[9], argv[10]);
+
+            while (true) {
+
+                char buffer[INFO_MESS_SIZE];
+                synchronizer_capture.receive_data(buffer, INFO_MESS_SIZE);
+                std::cout << "From capture received: " << buffer << std::endl;
+                process_synchronizer.receive_data(buffer, INFO_MESS_SIZE);
+                std::cout << "From process received: " << buffer << std::endl;
+
+                if (strcmp(buffer, "Image process adjust") != 0) {
+                    game_synchronizer.receive_data(buffer, INFO_MESS_SIZE);
+                    std::cout << "From game received: " << buffer << std::endl;
+                }
+
+            }
+
+        } catch (std::runtime_error& e) {
+            std::cerr << "Info process: " << e.what() << std::endl;
+            exit(-1);
+        }
+
     }
 
 }

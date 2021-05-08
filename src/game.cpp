@@ -42,20 +42,23 @@ namespace {
 
     void sync_with_queues_and_mem(int argc, const char* argv[]) {
 
-        if (argc != 5) {
+        if (argc != 8) {
             std::cerr << "CRITICAL ERROR: Game process wrong number of queues and memory synchronization" << std::endl;
             exit(-1);
         }
 
         try {
 
-            QueueSharedMemorySynchronizer synchronizer(argv[2], argv[3], argv[4]);
+            QueueSharedMemorySynchronizer synchronizer_process(argv[2], argv[3], argv[4]);
+            QueueSharedMemorySynchronizer synchronizer_info(argv[5], argv[6], argv[7]);
 
             while (true) {
 
                 cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
 
-                synchronizer.receive_data(frame.data, FRAME_SIZE);
+                synchronizer_process.receive_data(frame.data, FRAME_SIZE);
+                char* game_info = (char*)"Game info";
+                synchronizer_info.send_data((void*) game_info, INFO_MESS_SIZE);
                 //cv::imshow("Game received", frame);
                 //cv::waitKey(1);
             }

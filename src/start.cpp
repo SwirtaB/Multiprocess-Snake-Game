@@ -94,7 +94,7 @@ namespace {
             destroy_semaphores(semaphores_with_values);
             exit(-1);
         }
-        //TODO Fix starting parameters and each of processes sync_with_semaphores function.
+
         char* capture_param[] = {CAPTURE, SEM_SYNC, CAPTURE_PROCESS_SEM, PROCESS_CAPTURE_SEM, CAPTURE_PROCESS_BLOCK,
                                                     CAPTURE_INFO_SEM, INFO_CAPTURE_SEM, CAPTURE_INFO_BLOCK, nullptr};
         char* process_param[] = {PROCESS, SEM_SYNC, PROCESS_CAPTURE_SEM, CAPTURE_PROCESS_SEM, CAPTURE_PROCESS_BLOCK,
@@ -189,9 +189,15 @@ namespace {
 
         std::vector<std::pair<char*, unsigned int>> block_with_sizes =
                 std::vector<std::pair<char*, unsigned int>>({{CAPTURE_PROCESS_BLOCK, FRAME_SIZE},
-                                                             {PROCESS_GAME_BLOCK,    FRAME_SIZE}});
-        std::vector<char* > queues = std::vector<char*> ({CAPTURE_SEND_QUEUE, CAPTURE_RECV_QUEUE,
-                                                          PROCESS_RECV_QUEUE, PROCESS_SEND_QUEUE});
+                                                             {PROCESS_GAME_BLOCK,    FRAME_SIZE},
+                                                             {CAPTURE_INFO_BLOCK, INFO_MESS_SIZE},
+                                                             {PROCESS_INFO_BLOCK, INFO_MESS_SIZE},
+                                                             {GAME_INFO_BLOCK, INFO_MESS_SIZE}});
+        std::vector<char* > queues = std::vector<char*> ({CAPTURE_PROCESS_SEND_QUEUE, CAPTURE_PROCESS_RECV_QUEUE,
+                                                          PROCESS_GAME_RECV_QUEUE, PROCESS_GAME_SEND_QUEUE,
+                                                          CAPTURE_INFO_SEND_QUEUE, CAPTURE_INFO_RECV_QUEUE,
+                                                          PROCESS_INFO_SEND_QUEUE, PROCESS_INFO_RECV_QUEUE,
+                                                          GAME_INFO_SEND_QUEUE, GAME_INFO_RECV_QUEUE});
 
         try {
             create_queues(queues, MESS_SIZE);
@@ -203,10 +209,16 @@ namespace {
             exit(-1);
         }
 
-        char* capture_param[] = {CAPTURE, QUEUE_MEM_SYNC, CAPTURE_SEND_QUEUE, CAPTURE_RECV_QUEUE, CAPTURE_PROCESS_BLOCK, nullptr};
-        char* process_param[] = {PROCESS, QUEUE_MEM_SYNC, CAPTURE_SEND_QUEUE, CAPTURE_RECV_QUEUE, CAPTURE_PROCESS_BLOCK,
-                                 PROCESS_SEND_QUEUE, PROCESS_RECV_QUEUE, PROCESS_GAME_BLOCK, nullptr};
-        char* game_param[] = {GAME, QUEUE_MEM_SYNC, PROCESS_SEND_QUEUE, PROCESS_RECV_QUEUE, PROCESS_GAME_BLOCK, nullptr};
+        char* capture_param[] = {CAPTURE, QUEUE_MEM_SYNC, CAPTURE_PROCESS_SEND_QUEUE, CAPTURE_PROCESS_RECV_QUEUE, CAPTURE_PROCESS_BLOCK,
+                                                        CAPTURE_INFO_SEND_QUEUE, CAPTURE_INFO_RECV_QUEUE, CAPTURE_INFO_BLOCK, nullptr};
+        char* process_param[] = {PROCESS, QUEUE_MEM_SYNC, CAPTURE_PROCESS_SEND_QUEUE, CAPTURE_PROCESS_RECV_QUEUE, CAPTURE_PROCESS_BLOCK,
+                                                        PROCESS_GAME_SEND_QUEUE, PROCESS_GAME_RECV_QUEUE, PROCESS_GAME_BLOCK,
+                                                        PROCESS_INFO_SEND_QUEUE, PROCESS_INFO_RECV_QUEUE, PROCESS_INFO_BLOCK, nullptr};
+        char* game_param[] = {GAME, QUEUE_MEM_SYNC, PROCESS_GAME_SEND_QUEUE, PROCESS_GAME_RECV_QUEUE, PROCESS_GAME_BLOCK,
+                                                        GAME_INFO_SEND_QUEUE, GAME_INFO_RECV_QUEUE, GAME_INFO_BLOCK, nullptr};
+        char* info_param[] = {INFO, QUEUE_MEM_SYNC, CAPTURE_INFO_SEND_QUEUE, CAPTURE_INFO_RECV_QUEUE, CAPTURE_INFO_BLOCK,
+                                                    PROCESS_INFO_SEND_QUEUE, PROCESS_INFO_RECV_QUEUE, PROCESS_INFO_BLOCK,
+                                                    GAME_INFO_SEND_QUEUE, GAME_INFO_RECV_QUEUE, GAME_INFO_BLOCK, nullptr};
 
         std::vector<std::pair<pid_t, char*>> children;
 
@@ -215,6 +227,7 @@ namespace {
             children.emplace_back(start_process(capture_param));
             children.emplace_back(start_process(process_param));
             children.emplace_back(start_process(game_param));
+            children.emplace_back(start_process(info_param));
 
         } catch (std::runtime_error& e) {
             std::cerr << e.what() << std::endl;
@@ -232,19 +245,7 @@ namespace {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
 }
-
 
 
 int main(int argc, char const* argv[]){
