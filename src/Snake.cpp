@@ -68,8 +68,23 @@ bool Snake::check_snake() {
 }
 
 bool Snake::eat_fruit(Point &fruit) {
-    Point a = get_point(0).value(), b = get_point(1).value();
-    return std::pow(a.x - fruit.x, 2) + std::pow(a.y - fruit.y, 2) <= std::pow(fruitRadius, 2) && a.x > -1;
+    Point pointA = get_point(0).value(), pointB = get_point(1).value();
+    if((pointA.x - fruit.x)*(pointA.x - fruit.x) + (pointA.y - fruit.y)*(pointA.y - fruit.y) <= fruitRadius*fruitRadius)
+        return true;
+    pointA.x -= fruit.x;
+    pointA.y -= fruit.y;
+    pointB.x -= fruit.x;
+    pointB.y -= fruit.y;
+    int a = (pointB.x - pointA.x)*(pointB.x - pointA.x) + (pointB.y - pointA.y)*(pointB.y - pointA.y);
+    int b = 2*(pointA.x*(pointB.x - pointA.x) + pointA.y*(pointB.y - pointA.y));
+    int c = pointA.x*pointA.x + pointB.x*pointB.x - fruitRadius*fruitRadius;
+    int disc = b*b - 4*a*c;
+    if(disc <= 0)
+        return false;
+    auto sqrtdisc = sqrt(disc);
+    auto t1 = (-b + sqrtdisc)/(2*a);
+    auto t2 = (-b - sqrtdisc)/(2*a);
+    return (0 < t1 && t1 < 1) && (0 < t2 && t2 < 1);
 }
 
 void Game::generate_fruit() {
