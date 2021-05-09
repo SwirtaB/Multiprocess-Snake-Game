@@ -35,8 +35,8 @@ namespace {
             auto gameT = std::chrono::duration_cast<std::chrono::microseconds>(gameTime);
             auto syn = std::chrono::duration_cast<std::chrono::microseconds>(synTime);
             std::string game_info_str = std::to_string(gameT.count()) + "," + std::to_string(syn.count());
-            std::cerr << game_info_str << std::endl;
             char* game_info = (char *) game_info_str.c_str();
+
             synchronizer_info.send_data((void*) game_info, INFO_MESS_SIZE);
         }
     }

@@ -10,8 +10,8 @@
 #include <opencv4/opencv2/imgproc.hpp>
 #include "Snake.hpp"
 
-const unsigned int M_BUTTON = 109;
-const unsigned int ESC_BUTTON = 27;
+//const unsigned int M_BUTTON = 109;
+//const unsigned int ESC_BUTTON = 27;
 
 const unsigned int DISPLAY_STATUS = 0;
 const unsigned int ADJUST_STATUS = 1;

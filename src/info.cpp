@@ -1,7 +1,6 @@
 //
 // Created by radoslaw on 07.05.2021.
 //
-#include <chrono>
 #include <iostream>
 #include "synchronizer.hpp"
 #include "constants.hpp"
@@ -10,8 +9,8 @@
 namespace {
 
     [[noreturn]] void synchronize(Synchronizer& synchronizer_capture, Synchronizer& synchronizer_process, Synchronizer& synchronizer_game) {
-        //gameOff -
-        const std::string gameOff = "0";
+        //gameOff - przechowuje wartość wstawianą do logów czasu procesu gry gdy ten nie jest aktywny
+        const std::string gameOff = "0,0";
         Log log;
         log.open_file();
         while (true) {

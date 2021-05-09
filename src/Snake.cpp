@@ -12,22 +12,26 @@ void Snake::clear_snake() {
     snakeBody.clear();
 }
 
-void Snake::grow(cv::Point chunk) {
+void Snake::grow(const Point &chunk) {
     snakeBody.push_back(chunk);
 }
+
 int Snake::length() {
     return snakeBody.size();
 }
-void Snake::move(Point point){
+
+void Snake::move(const Point &point){
     snakeBody.push_front(point);
     snakeBody.pop_back();
 }
-Point Snake::get_point(int i) {
-    if(i >= 0 && i < snakeBody.size())
+
+std::optional<Point> Snake::get_point(unsigned long i) {
+    if(i < snakeBody.size())
         return snakeBody[i];
     else
-        return Point(-1, -1);
+        return std::nullopt;
 }
+
 void Snake::draw(cv::Mat &frame) {
     if (snakeBody.size() > 1)
         for (auto it = snakeBody.crbegin(); it != snakeBody.crend() - 1; ++it)
@@ -37,6 +41,7 @@ int Snake::orientation(const cv::Point &a, const cv::Point &b, const cv::Point &
     int value = int(((b.y - a.y) * (c.x - b.x)) - ((b.x - a.x) * (c.y - b.y)));
     return value == 0 ? 0 : value > 0 ? 1 : 2;
 }
+
 bool Snake::is_intersected(const cv::Point &a, const cv::Point &b, const cv::Point &c, const cv::Point &d) {
     int orientationArray[4] = {};
     orientationArray[0] = orientation(a, b, c);
@@ -45,23 +50,25 @@ bool Snake::is_intersected(const cv::Point &a, const cv::Point &b, const cv::Poi
     orientationArray[3] = orientation(c, d, b);
     return (orientationArray[0] != orientationArray[1]) && (orientationArray[2] != orientationArray[3]);
 }
+
 bool Snake::check_snake() {
     if(snakeBody.size() > 3){
         Point a, b, c, d;
-        int snakeSize = snakeBody.size() - 1;
-        a = get_point(0);
-        b = get_point(1);
-        for(int i = 3; i < snakeSize; ++i){
-            c = get_point(i);
-            d = get_point(i + 1);
+        unsigned long snakeSize = snakeBody.size() - 1;
+        a = get_point(0).value();
+        b = get_point(1).value();
+        for(unsigned long i = 3; i < snakeSize; ++i){
+            c = get_point(i).value();
+            d = get_point(i + 1).value();
             if(is_intersected(a, b, c, d))
                 return true;
         }
     }
     return false;
 }
+
 bool Snake::eat_fruit(Point &fruit) {
-    Point a = get_point(0);
+    Point a = get_point(0).value(), b = get_point(1).value();
     return std::pow(a.x - fruit.x, 2) + std::pow(a.y - fruit.y, 2) <= std::pow(fruitRadius, 2) && a.x > -1;
 }
 
@@ -73,7 +80,6 @@ void Game::generate_fruit() {
     fruit.x = posXGen(randomEngine);
     fruit.y = posYGen(randomEngine);
 }
-
 void Game::create_snake(Point &head) {
     for(int i = 1; i <= 10; ++i)
         snake.grow(Point(head.x - 5*i, head.y));
@@ -87,12 +93,12 @@ void Game::draw(Mat &frame){
 
 }
 
-void Game::draw_lost_message(cv::Mat &frame) {
+void Game::draw_lost_message(cv::Mat &frame) const {
     putText(frame, "PRZEGRALES", Point(windowSize.x/2 - 500, windowSize.y/2), FONT_HERSHEY_DUPLEX, 5, Scalar(0, 0, 255), 3);
     putText(frame, "Nacisnij ENTER by kontynuowac", Point(windowSize.x/2 - 300, windowSize.y/2 + 100), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 2);
 }
 
-void Game::draw_info_message(cv::Mat &frame) {
+void Game::draw_info_message(cv::Mat &frame) const {
     putText(frame, "By rozpoczac od nowa kliknij R, by wyjsc kliknij Esc", Point(windowSize.x/2 - 400, windowSize.y/2), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 2);
 }
 
@@ -102,7 +108,13 @@ GAME_STATE Game::get_state() {
 
 void Game::run(Point &marker, Mat &frame) {
     switch (gameState) {
+        case QUIT:
+            break;
         case PREPARING:
+            //Pomija "nieustalone" wartości markera -> brak artefaktów tuż po uruchomieniu
+            if(marker.x == 0 && marker.y == 0)
+                break;
+
             create_snake(marker);
             generate_fruit();
             gameState = PLAYING;
@@ -113,20 +125,22 @@ void Game::run(Point &marker, Mat &frame) {
                 --lives;
             if(lives == 0)
                 gameState = LOST;
+
             if(snake.eat_fruit(fruit)){
                 ++points;
-                auto lastPoint = snake.get_point(snake.length() - 1);
+                auto lastPoint = snake.get_point(snake.length() - 1).value();
                 snake.grow(cv::Point(lastPoint.x - 2, lastPoint.y - 2));
                 generate_fruit();
             }
-            this->draw(frame);
-            if(waitKey(1) == 27){
+
+            draw(frame);
+
+            if(waitKey(1) == ESC_BUTTON)
                 gameState = ENDED;
-            }
             break;
         case LOST:
             draw_lost_message(frame);
-            if(waitKey(1) == 13)
+            if(waitKey(1) == ENTER_BUTTON)
                 gameState = ENDED;
             break;
         case ENDED:
@@ -135,9 +149,9 @@ void Game::run(Point &marker, Mat &frame) {
             draw_info_message(frame);
 
             int key = waitKey(1);
-            if(key == 27)
+            if(key == ESC_BUTTON)
                 gameState = QUIT;
-            else if(key == 114)
+            else if(key == R_BUTTON)
                 gameState = PREPARING;
             break;
     }
