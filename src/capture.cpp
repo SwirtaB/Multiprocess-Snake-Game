@@ -4,6 +4,7 @@
 #include <iostream>
 #include <opencv4/opencv2/imgcodecs.hpp>
 #include <chrono>
+#include <thread>
 #include "synchronizer.hpp"
 #include "CaptureVideo.hpp"
 
@@ -15,6 +16,9 @@ namespace {
         capture.open();
 
         while (true) {
+            //test
+            //std::this_thread::sleep_for(std::chrono::microseconds(250));
+
             std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
             cv::Mat frame = capture.capture();
             std::chrono::time_point<std::chrono::high_resolution_clock> capEnd = std::chrono::high_resolution_clock::now();
