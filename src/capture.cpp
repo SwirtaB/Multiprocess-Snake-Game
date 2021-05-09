@@ -17,13 +17,17 @@ namespace {
         while (true) {
             std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
             cv::Mat frame = capture.capture();
+            std::chrono::time_point<std::chrono::high_resolution_clock> capEnd = std::chrono::high_resolution_clock::now();
+
             synchronizer_process.send_data(frame.data, FRAME_SIZE);
-            std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
+            std::chrono::time_point<std::chrono::high_resolution_clock> synEnd = std::chrono::high_resolution_clock::now();
 
             //Konwertowanie time_point na char * by można było przesłać
-            std::chrono::duration<double> captureTime = end - begin;
-            auto x = std::chrono::duration_cast<std::chrono::microseconds>(captureTime);
-            std::string capture_info_str = std::to_string(x.count());
+            std::chrono::duration<double> captureTime = capEnd - begin;
+            std::chrono::duration<double> synTime = synEnd - capEnd;
+            auto cap = std::chrono::duration_cast<std::chrono::microseconds>(captureTime);
+            auto syn = std::chrono::duration_cast<std::chrono::microseconds>(synTime);
+            std::string capture_info_str = std::to_string(cap.count()) + "," + std::to_string(syn.count());
             char *capture_info = (char *) capture_info_str.c_str();
 
             synchronizer_info.send_data(capture_info, INFO_MESS_SIZE);

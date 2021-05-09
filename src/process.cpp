@@ -18,21 +18,28 @@ namespace {
 
             cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
 
-            std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
+            std::chrono::time_point<std::chrono::high_resolution_clock> synBegin = std::chrono::high_resolution_clock::now();
             synchronizer_capture.receive_data(frame.data, FRAME_SIZE);
+
+            std::chrono::time_point<std::chrono::high_resolution_clock> procBegin = std::chrono::high_resolution_clock::now();
             auto result = processor.run(frame);
+            std::chrono::time_point<std::chrono::high_resolution_clock> procEnd = std::chrono::high_resolution_clock::now();
 
             if (processor.send_result()) {
                 memcpy(result.second.data, &result.first.x, sizeof(float));
                 memcpy(result.second.data+sizeof(float), &result.first.y, sizeof(float));
                 synchronizer_game.send_data(result.second.data, FRAME_SIZE);
             }
-            std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
+            std::chrono::time_point<std::chrono::high_resolution_clock> synEnd = std::chrono::high_resolution_clock::now();
 
             //Konwertowanie time_point na char * by można było przesłać
-            std::chrono::duration<double> captureTime = end - begin;
-            auto x = std::chrono::duration_cast<std::chrono::microseconds>(captureTime);
-            std::string process_info_str = processor.send_result() ? std::to_string(x.count()) : "P" + std::to_string(x.count());
+            std::chrono::duration<double> processTime = procEnd - procBegin;
+            std::chrono::duration<double> synTime = synEnd - synBegin - processTime;
+            auto proc = std::chrono::duration_cast<std::chrono::microseconds>(processTime);
+            auto syn = std::chrono::duration_cast<std::chrono::microseconds>(synTime);
+            std::string process_info_str = processor.send_result() ?
+                    std::to_string(proc.count()) + "," +std::to_string(syn.count()) :
+                    "P" + std::to_string(proc.count()) + "," +std::to_string(syn.count());
             char* process_info = (char *) process_info_str.c_str();
 
             synchronizer_info.send_data((void*)process_info, INFO_MESS_SIZE);

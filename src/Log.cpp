@@ -17,7 +17,9 @@ bool Log::open_file() {
     time_t localTime;
     time(&localTime);
     logFile << ctime(&localTime);
-    logFile << "Capture time" << separator << "Process time" << separator << "Game time" << std::endl;
+    logFile << "Capture time" << separator << "CapSyn time" << separator
+            << "Process time" << separator << "ProcSyn time" << separator
+            << "Game time" << separator << "GameSyn time" << std::endl;
     return false;
 }
 void Log::close_file() {
