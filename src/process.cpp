@@ -17,25 +17,25 @@ namespace {
         while (!processor.end()) {
 
             cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
-            synchronizer_capture.receive_data(frame.data, FRAME_SIZE);
 
             std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
+            synchronizer_capture.receive_data(frame.data, FRAME_SIZE);
             auto result = processor.run(frame);
-            std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
-
-            //Konwertowanie time_point na char * by można było przesłać
-            std::chrono::duration<double> captureTime = end - begin;
-            auto x = std::chrono::duration_cast<std::chrono::microseconds>(captureTime);
-            std::string process_info_str = result.first != cv::Point2f(0, 0) ? std::to_string(x.count()) : "P" + std::to_string(x.count());
-            char* process_info = (char *) process_info_str.c_str();
-            //char* process_info = result.first ? (char*) "Process image info" : (char*) "Image process adjust";
-            synchronizer_info.send_data((void*)process_info, INFO_MESS_SIZE);
 
             if (processor.send_result()) {
                 memcpy(result.second.data, &result.first.x, sizeof(float));
                 memcpy(result.second.data+sizeof(float), &result.first.y, sizeof(float));
                 synchronizer_game.send_data(result.second.data, FRAME_SIZE);
             }
+            std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
+
+            //Konwertowanie time_point na char * by można było przesłać
+            std::chrono::duration<double> captureTime = end - begin;
+            auto x = std::chrono::duration_cast<std::chrono::microseconds>(captureTime);
+            std::string process_info_str = processor.send_result() ? std::to_string(x.count()) : "P" + std::to_string(x.count());
+            char* process_info = (char *) process_info_str.c_str();
+
+            synchronizer_info.send_data((void*)process_info, INFO_MESS_SIZE);
         }
     }
 

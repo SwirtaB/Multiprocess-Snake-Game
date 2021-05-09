@@ -17,17 +17,18 @@ namespace {
             float x_, y_;
             cv::Mat frame(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC3);
 
+            std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
             synchronizer_process.receive_data(frame.data, FRAME_SIZE);
             memcpy(&x_, frame.data, sizeof(float));
             memcpy(&y_, frame.data+sizeof(float), sizeof(float));
 
             cv::Point marker = cv::Point(x_, y_);
 
-            std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
             game.run(marker, frame);
             cv::imshow("Game window", frame);
             std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
 
+            //Konwertowanie time_point na char * by można było przesłać
             std::chrono::duration<double> captureTime = end - begin;
             auto x = std::chrono::duration_cast<std::chrono::microseconds>(captureTime);
             std::string game_info_str = std::to_string(x.count());

@@ -17,6 +17,7 @@ namespace {
         while (true) {
             std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
             cv::Mat frame = capture.capture();
+            synchronizer_process.send_data(frame.data, FRAME_SIZE);
             std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
 
             //Konwertowanie time_point na char * by można było przesłać
@@ -26,7 +27,6 @@ namespace {
             char *capture_info = (char *) capture_info_str.c_str();
 
             synchronizer_info.send_data(capture_info, INFO_MESS_SIZE);
-            synchronizer_process.send_data(frame.data, FRAME_SIZE);
         }
     }
 
