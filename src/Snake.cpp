@@ -102,7 +102,7 @@ void Game::create_snake(Point &head) {
 
 void Game::draw(Mat &frame){
     snake.draw(frame);
-    circle(frame, this->fruit, fruitRadius, Scalar(255, 0, 0), FILLED);
+    circle(frame, this->fruit, fruitRadius, Scalar( 0, 0, 255), FILLED);
     putText(frame, "LIVES: " + to_string(lives), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 2);
     putText(frame, "SCORE: " + to_string(points), Point(windowSize.x - 200, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 2);
 
