@@ -80,10 +80,10 @@ queues, semaphores and shared memory allocation.
 
 Below we present some visual data showing lunched system: <br>
 
-**Marker adjustment**
+**Marker adjustment** <br>
 ![](pictures/marker.gif)
 
-**Brilliant gameplay**
+**Brilliant gameplay** <br>
 ![](pictures/gameplay.gif)
 
 
