@@ -17,7 +17,7 @@ namespace {
 
         while (true) {
             //test
-            //std::this_thread::sleep_for(std::chrono::microseconds(250));
+            //std::this_thread::sleep_for(std::chrono::microseconds(250000));
 
             std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
             cv::Mat frame = capture.capture();

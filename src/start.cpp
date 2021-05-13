@@ -5,6 +5,7 @@
 #include <mqueue.h>
 #include <fcntl.h>
 #include <wait.h>
+#include <sched.h>
 
 #include "shared_memory.hpp"
 #include "constants.hpp"
@@ -220,6 +221,15 @@ int main(int argc, char const* argv[]){
     }
 
     unsigned int sync_mode = std::atoi(argv[1]);
+
+//    int ret;
+//    sched_param sp{};
+//    sp.sched_priority = 99;
+//    ret = sched_setscheduler(0, SCHED_RR, &sp);
+//    if (ret == -1) {
+//        perror("sched_setscheduler");
+//        exit(EXIT_FAILURE);
+//    }
 
     if (sync_mode == SEMAPHORES_SYNC)
         start_processes_using_semaphores();
