@@ -11,7 +11,7 @@
 
 namespace {
 
-    [[noreturn]] void synchronize(Synchronizer& synchronizer_process, Synchronizer& synchronizer_info) {
+    void synchronize(Synchronizer& synchronizer_process, Synchronizer& synchronizer_info) {
         Game game(cv::Point(FRAME_WIDTH, FRAME_HEIGHT));
         while (game.get_state() != QUIT) {
             float x_, y_;
